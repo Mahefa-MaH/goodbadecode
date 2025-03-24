@@ -1,6 +1,6 @@
 Here’s the improved version of the README with better clarity, structure, and formatting:  
 
-```markdown
+markdown
 # Goodbadecode
 
 A curated repository showcasing both good and bad coding practices across multiple programming languages. This project serves as an educational resource to help developers write cleaner, more maintainable, and efficient code by illustrating common pitfalls and best practices.
@@ -85,7 +85,6 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 ---
 
 🔥 *Happy coding! Keep learning and improving!* 🚀
-```
 
 ### 🔥 Key Fixes:
 - **Better readability & structure**: Added emojis and spacing for a more engaging format.
