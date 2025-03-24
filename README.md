@@ -1,6 +1,3 @@
-Here’s the improved version of the README with better clarity, structure, and formatting:  
-
-markdown
 # Goodbadecode
 
 A curated repository showcasing both good and bad coding practices across multiple programming languages. This project serves as an educational resource to help developers write cleaner, more maintainable, and efficient code by illustrating common pitfalls and best practices.
