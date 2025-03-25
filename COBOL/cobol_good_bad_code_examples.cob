@@ -1,0 +1,30 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. GOOD-CODE-EXAMPLE.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  WS-NUMBER1 PIC 9(5) VALUE ZEROS.
+       01  WS-NUMBER2 PIC 9(5) VALUE ZEROS.
+       01  WS-SUM PIC 9(6) VALUE ZEROS.
+       PROCEDURE DIVISION.
+           DISPLAY "Enter first number: "
+           ACCEPT WS-NUMBER1
+           DISPLAY "Enter second number: "
+           ACCEPT WS-NUMBER2
+           ADD WS-NUMBER1 WS-NUMBER2 GIVING WS-SUM
+           DISPLAY "Sum: " WS-SUM
+           STOP RUN.
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. BAD-CODE-EXAMPLE.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  X PIC 9(10).
+       01  Y PIC 9(10).
+       01  Z PIC 9(20).
+       PROCEDURE DIVISION.
+           MOVE 1234567890 TO X
+           MOVE 9876543210 TO Y
+           ADD X TO Y GIVING Z  
+           DISPLAY Z
+           STOP RUN.
+
