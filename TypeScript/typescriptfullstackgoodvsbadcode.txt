@@ -1,0 +1,54 @@
+// Good Code Example:  TypeScript Function for Calculating Factorial (Backend)
+
+function factorial(n: number): number {
+  if (n === 0) {
+    return 1;
+  } else {
+    return n * factorial(n - 1);
+  }
+}
+
+
+// Bad Code Example:  TypeScript Function for Calculating Factorial with Errors (Backend)
+
+function badFactorial(n: any): any { //Type safety missing
+  if (n == 0) { // loose comparison
+    return 1;
+  } else if (n < 0){
+    return "Negative input not allowed"; //incorrect return type
+  } else {
+    return n * badFactorial(n - 1);
+  }
+}
+
+
+// Good Code Example: TypeScript React Component (Frontend)
+
+import React from 'react';
+
+interface Props {
+  name: string;
+}
+
+const MyComponent: React.FC<Props> = ({ name }) => {
+  return (
+    <div>
+      <h1>Hello, {name}!</h1>
+    </div>
+  );
+};
+
+export default MyComponent;
+
+
+
+// Bad Code Example:  Poorly structured and inefficient React component (Frontend)
+
+import React from 'react';
+
+const BadComponent = (props) => {
+    let name = props.name; //Implicit typing, no interface
+    return <div><h1>Hello, {name}!</h1><p>This is a really bad component.</p><p>It's poorly structured and hard to read.</p><p>It also lacks type safety.</p></div>;
+}
+
+export default BadComponent;
