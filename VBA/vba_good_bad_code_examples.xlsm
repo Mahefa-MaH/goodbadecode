@@ -1,0 +1,41 @@
+'Good Code Example:  Calculates the sum of numbers in a range.  Uses descriptive variable names and error handling.
+
+Sub GoodCodeExample()
+  Dim sum As Double
+  Dim i As Long
+  Dim numRange As Range
+
+  On Error GoTo ErrHandler
+
+  Set numRange = Range("A1:A10") 'Change range as needed
+
+  sum = 0
+  For i = 1 To numRange.Rows.Count
+    If IsNumeric(numRange.Cells(i, 1).Value) Then
+      sum = sum + numRange.Cells(i, 1).Value
+    Else
+      MsgBox "Non-numeric value found in range. Calculation aborted."
+      Exit Sub
+    End If
+  Next i
+
+  MsgBox "The sum is: " & sum
+
+  Exit Sub
+
+ErrHandler:
+  MsgBox "An error occurred: " & Err.Description
+End Sub
+
+
+'Bad Code Example:  Calculates the sum of numbers in a range. Lacks error handling, descriptive names, and efficient looping.
+
+Sub BadCodeExample()
+  Dim a As Variant
+  Dim b As Double
+  a = Range("A1:A10")
+  For Each c In a
+    b = b + c
+  Next c
+  MsgBox b
+End Sub
