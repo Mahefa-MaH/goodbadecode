@@ -1,55 +1,55 @@
-**Title:** Efficient Vertex Shader: Instancing vs. Per-Vertex Data
+**Title:** Efficient vs. Inefficient GLSL Fragment Shader: Texture Sampling
 
-**Summary:**  Instancing dramatically reduces the number of shader invocations by reusing vertex data across multiple instances, unlike per-vertex data which requires individual processing for each instance. This results in significantly improved performance, especially with large numbers of similar objects.
+**Summary:**  The good code utilizes optimized texture sampling techniques for improved performance, while the bad code suffers from redundant calculations and potential precision issues, leading to slower rendering and visual artifacts.
+
 
 **Good Code:**
 
 ```glsl
-#version 330 core
+#version 300 es
+precision highp float;
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-layout (location = 2) in mat4 instanceMatrix;
-
-uniform mat4 projection;
-uniform mat4 view;
-
-out vec3 ourColor;
+uniform sampler2D u_Texture;
+in vec2 v_TexCoord;
+out vec4 fragColor;
 
 void main() {
-    gl_Position = projection * view * instanceMatrix * vec4(aPos, 1.0);
-    ourColor = aColor;
+    vec4 textureColor = texture(u_Texture, v_TexCoord);
+    fragColor = textureColor;
 }
 ```
 
 **Bad Code:**
 
 ```glsl
-#version 330 core
+#version 300 es
+precision mediump float;
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 instanceMatrices[1000]; //Assuming a maximum of 1000 instances.  This is VERY BAD
-uniform int instanceIndex; //Need to pass this as an attribute
-
-
-out vec3 ourColor;
+uniform sampler2D u_Texture;
+in vec2 v_TexCoord;
+out vec4 fragColor;
 
 void main() {
-    gl_Position = projection * view * instanceMatrices[instanceIndex] * vec4(aPos, 1.0);
-    ourColor = aColor;
+    vec2 texCoord = v_TexCoord * 2.0 - 1.0; //Unnecessary transformation
+    vec4 textureColor = texture(u_Texture, texCoord);
+    vec4 adjustedColor = textureColor;
+    adjustedColor.r = textureColor.r * 1.0; //Redundant multiplication
+    adjustedColor.g = textureColor.g * 1.0; //Redundant multiplication
+    adjustedColor.b = textureColor.b * 1.0; //Redundant multiplication
+    adjustedColor.a = textureColor.a * 1.0; //Redundant multiplication
+    fragColor = adjustedColor; 
 }
 ```
 
+
 **Key Takeaways:**
 
-* **Efficiency:** The good code leverages instancing, processing all instances in a single draw call, resulting in far fewer shader invocations and dramatically improved performance.  The bad code requires multiple draw calls or inefficient use of large uniform arrays.
-* **Scalability:** The good code scales seamlessly with the number of instances. The bad code is limited by the arbitrarily chosen size of the `instanceMatrices` array.  Changing this requires recompiling the shader.
-* **Maintainability:** The good code is cleaner and easier to understand and maintain. The bad code necessitates managing a large uniform array and an additional uniform variable for indexing, making it prone to errors.
-* **Flexibility:**  The good code is more flexible;  you don't need to define the maximum number of instances beforehand. The bad code is inflexible as it requires a predetermined maximum number of instances and changing that requires modifying the shader.
-* **Uniform Memory Usage:** The good code uses less uniform memory compared to bad code which consumes a large chunk of the memory for uniform variables. Uniform memory is usually limited.
+* **Precision:** The good code uses `highp float` for higher precision, crucial for accurate color representation, especially with HDR.  The bad code uses `mediump float`, potentially leading to visible banding or artifacts.
 
-The good example demonstrates the power and efficiency of using instancing in GLSL for rendering large numbers of similar objects. The bad example showcases common pitfalls, such as relying on large uniform arrays, and its limitations in scalability and efficiency.
+* **Redundant Calculations:** The bad code performs numerous unnecessary calculations (e.g., multiplying color components by 1.0 and an unnecessary coordinate transformation). This wastes processing power and reduces performance.
+
+* **Efficiency:** The good code directly samples the texture and assigns the result to the output, minimizing operations and maximizing efficiency.  The bad code introduces unnecessary variables and operations, increasing the computational burden.
+
+* **Readability and Maintainability:** The good code is concise and easier to understand and maintain compared to the bad code, which is cluttered with unnecessary operations.
+
+* **Potential for Errors:** The unnecessary transformations in the bad code increase the risk of introducing errors, especially if these transformations become more complex.  The simple and direct approach of the good code minimizes this risk.
