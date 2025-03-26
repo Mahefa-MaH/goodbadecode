@@ -11,18 +11,16 @@ fn main() {
 }
 
 
-// Bad Code Example: Calculating the factorial of a number (inefficient and error-prone)
+// Bad Code Example: Calculating the factorial of a number with potential stack overflow
 fn bad_factorial(n: u64) -> u64 {
-    let mut result = 1;
-    for i in 1..=n {
-        result *= i;
-        if result == 0 { //This is unnecessary and potentially hides issues.  A better approach would be to use Result<u64, Error> to handle potential overflow.
-            break;
-        }
+    if n == 0 {
+        1
+    } else {
+        n * bad_factorial(n - 1) // Potential stack overflow for large n
     }
-    result
 }
 
 fn main2() {
-    println!("Bad Factorial of 5: {}", bad_factorial(5));
+    println!("Factorial of 5: {}", bad_factorial(5));
 }
+
