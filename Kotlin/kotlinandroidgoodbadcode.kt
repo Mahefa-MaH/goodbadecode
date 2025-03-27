@@ -1,35 +1,27 @@
-// Good Code Example: Using Kotlin Coroutines for Network Calls
+// Good Code Example:  Using Kotlin's coroutines for network operations
 
 import kotlinx.coroutines.*
 
-fun makeNetworkCall(): String {
-    return runBlocking {
-        withContext(Dispatchers.IO) {
-            // Simulate network call
-            delay(1000)
-            "Network call successful"
-        }
+fun fetchData(url: String): String {
+    return withContext(Dispatchers.IO) {
+        // Simulate network request
+        delay(1000)
+        "Data from $url"
     }
 }
 
+// Bad Code Example: Blocking the main thread for network operations
 
-// Bad Code Example: Blocking the Main Thread for Network Calls
 
-fun makeNetworkCallBad(): String {
-    // Simulate network call - This blocks the main thread!
+fun fetchDataBlocking(url: String): String {
+    // Simulate network request - blocks main thread!
     Thread.sleep(1000)
-    return "Network call successful (but blocking the main thread!)"
+    return "Data from $url"
 }
 
-//Good Code Example: Using Data Classes for structured data
 
-data class User(val id:Int, val name:String, val email:String)
+//Good Code Example: Using View Binding for efficient view access
 
-//Bad Code Example:  Not using data classes
 
-class UserBad(val id:Int, val name:String, val email:String){
-    fun getId():Int{return id}
-    fun getName():String{return name}
-    fun getEmail():String{return email}
+// Bad Code Example:  Finding views using findViewById repeatedly.
 
-}
