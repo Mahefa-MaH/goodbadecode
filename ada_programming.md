@@ -1,100 +1,72 @@
-**Title:** Ada Task Synchronization: Rendezvous vs. Protected Objects
+**Title:** Ada: Robust vs. Risky String Handling
 
-**Summary:**  Ada offers two primary mechanisms for task synchronization: rendezvous, which involves explicit communication between tasks, and protected objects, which provide controlled access to shared resources.  The choice depends on the complexity of the interaction and the need for mutual exclusion.
+**Summary:**  Ada's strong typing prevents common string errors like buffer overflows, unlike less-strict languages.  The good example leverages Ada's built-in string manipulation for safety and efficiency; the bad example uses potentially unsafe C-style operations.
 
 
-**Good Code (Protected Object):**
+**Good Code:**
 
 ```ada
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Numerics.Discrete_Random;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-procedure Protected_Object_Example is
-   subtype Index_Type is Integer range 1..10;
-   protected type Counter is
-      entry Increment (Value : in Integer);
-      entry Decrement (Value : in Integer);
-      function Get_Count return Integer;
-   private
-      Count : Integer := 0;
-   end Counter;
-
-   Counter_Obj : Counter;
-   Gen : Ada.Numerics.Discrete_Random.Generator;
+procedure String_Manipulation is
+   My_String : Unbounded_String := To_Unbounded_String("Hello, Ada!");
+   New_String : Unbounded_String;
 begin
-   Ada.Numerics.Discrete_Random.Reset(Gen);
-   for I in 1..100 loop
-      declare
-         R : Integer := Ada.Numerics.Discrete_Random.Random(Gen, 1..2); --Randomly choose increment or decrement
-      begin
-         if R = 1 then
-            Counter_Obj.Increment(1);
-         else
-            Counter_Obj.Decrement(1);
-         end if;
-      exception
-         when others => Put_Line("Error during counter operation");
-      end;
-   end loop;
-   Put_Line("Final Count: " & Integer'Image(Counter_Obj.Get_Count));
-end Protected_Object_Example;
+   Put_Line("Original String: " & To_String(My_String));
 
-protected body Counter is
-   entry Increment (Value : in Integer) when Count < 100 is
-   begin
-      Count := Count + Value;
-   end Increment;
+   -- Concatenation
+   New_String := My_String & To_Unbounded_String(" How are you?");
+   Put_Line("Concatenated String: " & To_String(New_String));
 
-   entry Decrement (Value : in Integer) when Count > -100 is
-   begin
-      Count := Count - Value;
-   end Decrement;
+   -- Substring Extraction (slice)
+   New_String := My_String(1..5);  -- Extract "Hello"
+   Put_Line("Substring: " & To_String(New_String));
 
-   function Get_Count return Integer is
+   -- Finding Substring
+   if My_String.Find("Ada") /= 0 then
+      Put_Line("Found 'Ada'!");
+   end if;
+
+   -- Exception Handling (demonstrates robustness)
    begin
-      return Count;
-   end Get_Count;
-end Counter;
+      New_String := My_String(1..100); --Trying to access out of bounds index
+   exception
+      when Constraint_Error =>
+         Put_Line("Index out of bounds!");
+   end;
+end String_Manipulation;
 ```
 
-**Bad Code (Rendezvous with potential deadlock):**
+
+**Bad Code:**
 
 ```ada
 with Ada.Text_IO; use Ada.Text_IO;
 
-task body Producer is
+procedure String_Manipulation_Bad is
+   My_String : String(1..20); -- Fixed size string, prone to buffer overflow
+   New_String : String(1..20);
 begin
-   for I in 1..10 loop
-      Consumer.Entry_Call; --This is blocking, waiting for consumer
-      Put_Line("Producer produced");
-   end loop;
-end Producer;
+   My_String := "Hello, Ada!"; 
 
-task body Consumer is
-begin
-   for I in 1..10 loop
-      Producer.Entry_Call; --This is blocking, waiting for producer
-      Put_Line("Consumer consumed");
-   end loop;
-end Consumer;
+   --Dangerous concatenation.  Buffer overflow possible!
+   New_String := My_String & " How are you?"; --Potential buffer overflow if combined length exceeds 20
 
-task Producer;
-task Consumer;
+   Put_Line(New_String); --Might print garbage or crash
 
-procedure Main is
-begin
-   null; --No need for anything in main
-end Main;
+end String_Manipulation_Bad;
+
 ```
-
 
 **Key Takeaways:**
 
-* **Mutual Exclusion:** Protected objects inherently provide mutual exclusion, preventing race conditions when accessing shared data. The `when` clause ensures that entries are only accepted under specific conditions, avoiding deadlocks. The bad code example lacks this feature which is why it can deadlock easily.
-* **Simplicity:** Protected objects often lead to simpler and more readable code, especially for managing shared resources with multiple concurrent tasks. The rendezvous approach is more complex to implement and understand, particularly in situations beyond simple producer/consumer models.
-* **Deadlock Avoidance:**  The good code (using protected objects) avoids the potential for deadlock present in the bad code (using rendezvous without careful consideration of ordering).  The `when` clause in the protected object entry prevents the program from getting stuck waiting for a condition that will never be met.
-* **Error Handling:** The good code includes exception handling (`when others`), improving robustness.  The bad code lacks error handling.
-* **Efficiency:** Protected objects generally offer better performance than rendezvous for simpler synchronization tasks, as they avoid the overhead of context switching associated with rendezvous calls.
+* **Type Safety:** Ada's `Unbounded_String` prevents buffer overflows and other memory corruption issues common with fixed-size character arrays. The bad example uses a fixed-size string, introducing the risk of buffer overflow if the resulting string length exceeds its capacity.
 
+* **Memory Management:** Ada automatically manages memory for `Unbounded_String`, reducing the risk of memory leaks and dangling pointers.
 
-The bad code example demonstrates a classic deadlock scenario: both tasks wait for each other indefinitely.  The good code, employing protected objects, eliminates this risk through controlled access and conditional entry acceptance.  Protected objects are frequently a more elegant and efficient solution in many concurrency scenarios compared to rendezvous in Ada.
+* **Built-in String Functions:** Ada provides safer and more efficient string manipulation functions (`&`, `.Find`, slicing) than manual character-by-character operations.
+
+* **Exception Handling:**  The good example showcases Ada's exception handling mechanism, gracefully handling potential errors like index-out-of-bounds access.  The bad example offers no protection against such errors.
+
+* **Readability and Maintainability:** The good example is more readable and easier to maintain due to its use of clear, high-level string operations.  The bad example necessitates manual memory management and error checking, increasing complexity and the chance of errors.
