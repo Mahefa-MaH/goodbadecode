@@ -1,0 +1,28 @@
+/* Good CSS */
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 1em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+/* Bad CSS */
+body{font-family:arial;margin:0;padding:0;}
+.container{max-width:960px;margin:auto;padding:20px;}h1{font-size:2em;margin-bottom:1em;}p{line-height:1.6;}
+div#content{width:80%;background-color:yellow;color:blue;float:left;}
+#sidebar{width:20%;background-color:grey;float:left;}
+.red{color:red !important;} /* Overuse of !important */
