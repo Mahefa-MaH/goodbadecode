@@ -1,0 +1,50 @@
+'Good Code Example: Calculating the area of a rectangle
+Public Function CalculateRectangleArea(length As Double, width As Double) As Double
+    Return length * width
+End Function
+
+'Bad Code Example: Calculating the area of a rectangle with unnecessary complexity and potential errors.
+Public Function CalculateRectangleAreaBad(length As String, width As String) As Double
+    Dim l As Double
+    Dim w As Double
+    Try
+        l = Double.Parse(length)
+        w = Double.Parse(width)
+    Catch ex As FormatException
+        Return -1 'Error handling is insufficient and doesn't provide information about the error.
+    End Try
+    If l <= 0 Or w <= 0 Then Return -1 'Error handling is insufficient and doesn't provide information about the error.
+    Return l * w
+End Function
+
+'Good Code Example:  Using a structured approach to handle user input.
+Public Sub GetAndProcessUserInput()
+    Dim input As String
+    Console.WriteLine("Enter a number:")
+    input = Console.ReadLine()
+    If Integer.TryParse(input, num) Then
+        Console.WriteLine("You entered: " & num)
+    Else
+        Console.WriteLine("Invalid input.")
+    End If
+
+End Sub
+
+'Bad Code Example: Error prone input handling, lacking validation and error handling
+Public Sub GetAndProcessUserInputBad()
+    Dim num As Integer = Integer.Parse(Console.ReadLine())
+    Console.WriteLine("You entered: " & num)
+End Sub
+
+
+'Good code example: Using appropriate data structures.
+Public Class Person
+    Public Property FirstName As String
+    Public Property LastName As String
+End Class
+
+'Bad code example: Using inappropriate data structures (string concatenation for storing multiple attributes)
+Public Sub BadPersonData()
+    Dim personData As String = "John Doe, 30, Male"
+End Sub
+
