@@ -7,7 +7,7 @@
     (+ a b)))
 
 
-; Bad Code: Uses nested `let` and less descriptive variable names.  Harder to read and maintain.
+; Bad Code: Uses nested `let` and unclear variable names.
 (define (bad-example x y)
   (let ([a x])
     (let ([b (+ a 1)]
