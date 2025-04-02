@@ -1,46 +1,40 @@
 <?php
 
-// Good Code Example:  Using prepared statements to prevent SQL injection
-$conn = new PDO("mysql:host=localhost;dbname=mydatabase", "username", "password");
-$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-$stmt->execute([$_POST['username']]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// Good Code Example: Using a well-structured class for database interaction
 
-// Bad Code Example:  Vulnerable to SQL injection
-$username = $_POST['username'];
-$sql = "SELECT * FROM users WHERE username = '$username'";
+class Database {
+    private $pdo;
+
+    public function __construct($host, $dbname, $user, $password) {
+        try {
+            $this->pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $password);
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            die("Database connection failed: " . $e->getMessage());
+        }
+    }
+
+    public function query($sql, $params = []) {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+
+// Bad Code Example: Directly embedding database credentials and SQL in the code
+
+$host = "localhost";
+$dbname = "mydatabase";
+$user = "myuser";
+$password = "mypassword";
+
+$conn = new PDO("mysql:host=$host;dbname=$dbname", $user, $password);
+$sql = "SELECT * FROM users WHERE username = '" . $_GET['username'] . "'"; //SQL Injection vulnerability
 $result = $conn->query($sql);
-$user = $result->fetch(PDO::FETCH_ASSOC);
-
-
-//Good Code Example:  Proper error handling
-try {
-    // Code that might throw an exception
-} catch (Exception $e) {
-    // Handle the exception appropriately
-    error_log($e->getMessage());
-    http_response_code(500);
-    echo "Internal Server Error";
+foreach ($result as $row) {
+    echo $row['username'];
 }
-
-
-//Bad Code Example: Lack of error handling
-// Code that might throw an exception without any error handling
-
-//Good Code Example: Using a consistent coding style.
-$name = "John Doe";
-$age  = 30;
-
-//Bad Code Example:Inconsistent coding style.
-$NamE = "Jane Doe";
-  $aGe =25;
-
-//Good Code Example: Using functions to improve code organization and reusability.
-function add($a, $b){
-    return $a + $b;
-}
-
-//Bad Code Example: Code duplication and lack of functions.
 
 
 ?>
