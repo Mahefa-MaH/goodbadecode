@@ -1,55 +1,87 @@
-**Title:** Efficient String Manipulation in PHP: A Comparison
+**Title:** Efficient String Manipulation in PHP: Secure vs. Insecure Approaches
 
-**Summary:**  This example contrasts inefficient string concatenation using the `.` operator with the significantly faster `sprintf()` function for building strings in PHP, highlighting performance and readability improvements.
+**Summary:**  The key difference lies in using prepared statements to prevent SQL injection vulnerabilities when handling user-supplied data in database queries,  and employing more efficient string functions to avoid unnecessary overhead.
 
 **Good Code:**
 
 ```php
 <?php
 
-function buildStringEfficiently($name, $age) {
-  return sprintf("My name is %s and I am %d years old.", $name, $age);
+// Secure database interaction using prepared statements
+function getUserName($userId, $pdo){
+    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    return isset($user['username']) ? $user['username'] : null;
 }
 
-$name = "Alice";
-$age = 30;
-$output = buildStringEfficiently($name, $age);
-echo $output; // Output: My name is Alice and I am 30 years old.
+// Efficient string manipulation
+function formatName($firstName, $lastName){
+    $firstName = trim(mb_ucfirst(strtolower($firstName))); // handles multibyte characters
+    $lastName = trim(mb_ucfirst(strtolower($lastName)));
+    return $firstName . " " . $lastName;
+}
+
+// Example usage (assuming PDO connection is established as $pdo)
+$userId = $_GET['id']; // Get user ID from GET request
+$userName = getUserName($userId, $pdo);
+if ($userName) {
+  echo "User Name: " . $userName . "<br>";
+} else {
+  echo "User not found.<br>";
+}
+
+
+$firstName = $_POST['firstName'];
+$lastName = $_POST['lastName'];
+echo "Formatted Name: " . formatName($firstName, $lastName);
+
 
 ?>
 ```
-
 
 **Bad Code:**
 
 ```php
 <?php
 
-function buildStringInefficiently($name, $age) {
-  $output = "My name is ";
-  $output .= $name;
-  $output .= " and I am ";
-  $output .= $age;
-  $output .= " years old.";
-  return $output;
+// Vulnerable to SQL injection
+function getUserNameInsecure($userId){
+    $query = "SELECT username FROM users WHERE id = '$userId'";
+    $result = mysql_query($query); // Deprecated and insecure!
+    if ($row = mysql_fetch_assoc($result)){
+        return $row['username'];
+    } else {
+        return null;
+    }
 }
 
-$name = "Bob";
-$age = 25;
-$output = buildStringInefficiently($name, $age);
-echo $output; // Output: My name is Bob and I am 25 years old.
+// Inefficient string manipulation
+function formatNameInefficient($firstName, $lastName){
+    $firstName = ucfirst(strtolower($firstName));
+    $lastName = ucfirst(strtolower($lastName));
+    return $firstName . " " . $lastName; //No trimming, potential whitespace issues.
+}
+
+// Example usage (highly vulnerable!)
+$userId = $_GET['id'];
+$userName = getUserNameInsecure($userId);
+echo "User Name: " . $userName;
+
+$firstName = $_POST['firstName'];
+$lastName = $_POST['lastName'];
+echo "Formatted Name: " . formatNameInefficient($firstName, $lastName);
 
 ?>
 ```
 
+
 **Key Takeaways:**
 
-* **Performance:** `sprintf()` is generally faster than repeated string concatenation using the `.` operator, especially with many concatenations or large strings.  The `.` operator creates new string objects in each iteration, while `sprintf()` performs the operation more efficiently.
+* **SQL Injection Prevention:** The good code uses prepared statements, a crucial security measure to prevent SQL injection attacks by separating data from SQL code.  The bad code directly incorporates user input into the SQL query, making it extremely vulnerable.  Using a modern database library like PDO is also recommended over deprecated functions like `mysql_*`.
+* **Efficient String Handling:** The good code utilizes `mb_ucfirst` and `mb_strtolower` for better handling of multibyte characters (important for internationalization) and `trim` to remove leading/trailing whitespace. The bad code lacks these features resulting in less robust and potentially inaccurate output.
+* **Error Handling:** The good code includes more robust error handling (checking if the user exists), whereas the bad code lacks comprehensive error checks, which can lead to unexpected behavior or crashes.
+* **Code Maintainability:**  The good code is cleaner, more readable, and easier to maintain due to its modular design and use of meaningful function names.
+* **Security Best Practices:** The good code follows secure coding practices to prevent vulnerabilities, while the bad code exposes serious security risks.  Never directly embed user-supplied data into SQL queries.
 
-* **Readability:** `sprintf()` improves code readability by clearly separating the string structure from the data being inserted.  This makes the code easier to understand and maintain.
 
-* **Type Safety:** `sprintf()` allows for type hinting, which prevents unexpected type errors. The format specifiers ensure data is inserted correctly (e.g., `%s` for strings, `%d` for integers). The bad example implicitly converts the integer `$age` to a string, which is generally less robust.
-
-* **Maintainability:**  Changes to the string structure are easier to make in `sprintf()` as you modify the format string itself.  With the `.` operator, changes may require updating multiple lines of code.
-
-* **Security:** While not directly demonstrated here, `sprintf()` can help prevent potential vulnerabilities like SQL injection if used correctly with parameterized queries.  Improper string concatenation can easily lead to security holes.
