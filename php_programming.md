@@ -1,40 +1,41 @@
-**Title:** Efficient String Manipulation in PHP: Secure vs. Insecure Approaches
+**Title:** Secure PHP User Input Handling: Safe vs. Unsafe
 
-**Summary:**  The key difference lies in using prepared statements to prevent SQL injection vulnerabilities when handling user-supplied data in database queries,  and employing more efficient string functions to avoid unnecessary overhead.
+**Summary:**  The key difference lies in how user input is sanitized and validated.  Good code uses parameterized queries or prepared statements to prevent SQL injection and escapes HTML to prevent XSS attacks, while bad code directly incorporates unsanitized user input, creating significant security vulnerabilities.
+
 
 **Good Code:**
 
 ```php
 <?php
 
-// Secure database interaction using prepared statements
-function getUserName($userId, $pdo){
-    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+// Secure user input handling with prepared statements
+function getUserData($userId, $pdo) {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$userId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    return isset($user['username']) ? $user['username'] : null;
-}
-
-// Efficient string manipulation
-function formatName($firstName, $lastName){
-    $firstName = trim(mb_ucfirst(strtolower($firstName))); // handles multibyte characters
-    $lastName = trim(mb_ucfirst(strtolower($lastName)));
-    return $firstName . " " . $lastName;
-}
-
-// Example usage (assuming PDO connection is established as $pdo)
-$userId = $_GET['id']; // Get user ID from GET request
-$userName = getUserName($userId, $pdo);
-if ($userName) {
-  echo "User Name: " . $userName . "<br>";
-} else {
-  echo "User not found.<br>";
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 
-$firstName = $_POST['firstName'];
-$lastName = $_POST['lastName'];
-echo "Formatted Name: " . formatName($firstName, $lastName);
+// Secure output escaping with htmlspecialchars
+function displayUserData($userData) {
+    if ($userData) {
+        echo "<p>ID: " . htmlspecialchars($userData['id']) . "</p>";
+        echo "<p>Username: " . htmlspecialchars($userData['username']) . "</p>";
+    } else {
+        echo "<p>User not found.</p>";
+    }
+}
+
+
+// Database connection (replace with your credentials)
+$pdo = new PDO('mysql:host=localhost;dbname=your_database', 'your_user', 'your_password');
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+
+// Example usage (always sanitize user input before using it)
+$userId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+$userData = getUserData($userId, $pdo);
+displayUserData($userData);
 
 
 ?>
@@ -45,43 +46,32 @@ echo "Formatted Name: " . formatName($firstName, $lastName);
 ```php
 <?php
 
-// Vulnerable to SQL injection
-function getUserNameInsecure($userId){
-    $query = "SELECT username FROM users WHERE id = '$userId'";
-    $result = mysql_query($query); // Deprecated and insecure!
-    if ($row = mysql_fetch_assoc($result)){
-        return $row['username'];
-    } else {
-        return null;
-    }
-}
-
-// Inefficient string manipulation
-function formatNameInefficient($firstName, $lastName){
-    $firstName = ucfirst(strtolower($firstName));
-    $lastName = ucfirst(strtolower($lastName));
-    return $firstName . " " . $lastName; //No trimming, potential whitespace issues.
-}
-
-// Example usage (highly vulnerable!)
+// Insecure user input handling - vulnerable to SQL injection and XSS
 $userId = $_GET['id'];
-$userName = getUserNameInsecure($userId);
-echo "User Name: " . $userName;
+$username = $_GET['username'];
 
-$firstName = $_POST['firstName'];
-$lastName = $_POST['lastName'];
-echo "Formatted Name: " . formatNameInefficient($firstName, $lastName);
+$query = "SELECT * FROM users WHERE id = '$userId'";
+$result = mysql_query($query); //Deprecated function - using for demonstration of bad practice
 
+if ($result) {
+    $row = mysql_fetch_assoc($result);
+    echo "<p>ID: " . $row['id'] . "</p>";
+    echo "<p>Username: " . $row['username'] . "</p>";
+} else {
+    echo "<p>User not found.</p>";
+}
 ?>
 ```
 
 
 **Key Takeaways:**
 
-* **SQL Injection Prevention:** The good code uses prepared statements, a crucial security measure to prevent SQL injection attacks by separating data from SQL code.  The bad code directly incorporates user input into the SQL query, making it extremely vulnerable.  Using a modern database library like PDO is also recommended over deprecated functions like `mysql_*`.
-* **Efficient String Handling:** The good code utilizes `mb_ucfirst` and `mb_strtolower` for better handling of multibyte characters (important for internationalization) and `trim` to remove leading/trailing whitespace. The bad code lacks these features resulting in less robust and potentially inaccurate output.
-* **Error Handling:** The good code includes more robust error handling (checking if the user exists), whereas the bad code lacks comprehensive error checks, which can lead to unexpected behavior or crashes.
-* **Code Maintainability:**  The good code is cleaner, more readable, and easier to maintain due to its modular design and use of meaningful function names.
-* **Security Best Practices:** The good code follows secure coding practices to prevent vulnerabilities, while the bad code exposes serious security risks.  Never directly embed user-supplied data into SQL queries.
+* **Prepared Statements/Parameterized Queries:** The good code uses prepared statements to prevent SQL injection. This separates the SQL query from the user-supplied data, neutralizing malicious input.
+* **Input Sanitization:**  `filter_input()` in the good code helps sanitize user input, reducing the risk of unexpected data types or malicious code.
+* **Output Escaping:** `htmlspecialchars()` in the good code escapes HTML special characters, preventing Cross-Site Scripting (XSS) attacks.  The bad code directly echoes user input, making it vulnerable to XSS.
+* **Error Handling:** The good code uses a try-catch block for better error handling and security. The bad code has minimal error handling.
+* **Deprecated Functions:** The bad code uses the deprecated `mysql_*` functions, which are insecure and no longer supported.  The good code uses PDO, a more secure and robust database abstraction layer.
+* **Data Validation:**  The good code implicitly validates the `id` as an integer via `FILTER_SANITIZE_NUMBER_INT`.  The bad code performs no input validation.
 
 
+The good code demonstrates best practices for secure PHP development, mitigating common vulnerabilities. The bad code exemplifies the risks of insecure coding practices.  Always prioritize security when handling user input in your PHP applications.
