@@ -1,4 +1,4 @@
-// Good Code Example: Using Event Listeners and a State Machine for Robust UI Interaction
+// Good Code Example: Using Event Listeners and State Management for Button Clicks
 
 package 
 {
@@ -7,53 +7,43 @@ package
 
 	public class GoodCodeExample extends Sprite
 	{
-		private enum State {IDLE, HOVER, CLICKED};
-		private var currentState:State = State.IDLE;
+		private var _button:Sprite;
+		private var _isButtonClicked:Boolean = false;
 
-		public function GoodCodeExample()
+		public function GoodCodeExample() 
 		{
-			this.addEventListener(MouseEvent.ROLL_OVER, onRollOver);
-			this.addEventListener(MouseEvent.ROLL_OUT, onRollOut);
-			this.addEventListener(MouseEvent.CLICK, onClick);
-			this.buttonMode = true;
+			_button = new Sprite();
+			_button.graphics.beginFill(0x00FF00);
+			_button.graphics.drawRect(0, 0, 100, 50);
+			_button.graphics.endFill();
+			_button.x = 50;
+			_button.y = 50;
+			addChild(_button);
+
+			_button.addEventListener(MouseEvent.CLICK, onClickHandler);
 		}
 
-		private function onRollOver(e:MouseEvent):void
+		private function onClickHandler(event:MouseEvent):void
 		{
-			if (currentState == State.IDLE)
+			_isButtonClicked = !_isButtonClicked;
+			if (_isButtonClicked)
 			{
-				currentState = State.HOVER;
-				graphics.beginFill(0xFF0000); //Change color on hover
-				graphics.drawRect(0,0,100,50);
-				graphics.endFill();
-			}
-		}
-
-		private function onRollOut(e:MouseEvent):void
-		{
-			if (currentState == State.HOVER)
-			{
-				currentState = State.IDLE;
-				graphics.clear(); //Reset to default state
-			}
-		}
-
-		private function onClick(e:MouseEvent):void
-		{
-			if (currentState == State.HOVER)
-			{
-				currentState = State.CLICKED;
-				//Perform click action
-				trace("Clicked!");
-				currentState = State.IDLE;
-				graphics.clear();
+				_button.graphics.clear();
+				_button.graphics.beginFill(0xFF0000);
+				_button.graphics.drawRect(0, 0, 100, 50);
+				_button.graphics.endFill();
+			} else {
+				_button.graphics.clear();
+				_button.graphics.beginFill(0x00FF00);
+				_button.graphics.drawRect(0, 0, 100, 50);
+				_button.graphics.endFill();
 			}
 		}
 	}
 }
 
 
-// Bad Code Example:  Direct Manipulation, Lack of Event Handling and State Management.
+// Bad Code Example: Directly Manipulating Display List Without Event Listeners
 
 package 
 {
@@ -61,11 +51,24 @@ package
 
 	public class BadCodeExample extends Sprite
 	{
-		public function BadCodeExample()
+		public function BadCodeExample() 
 		{
-			graphics.beginFill(0x0000FF);
-			graphics.drawRect(0, 0, 100, 50);
-			graphics.endFill();
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0x0000FF);
+			button.graphics.drawRect(0,0,100,50);
+			button.graphics.endFill();
+			button.x = 50;
+			button.y = 50;
+			addChild(button);
+
+			//No event listener, direct manipulation - prone to errors and hard to maintain.
+			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
+				button.graphics.clear();
+				button.graphics.beginFill(0xFF0000);
+				button.graphics.drawRect(0,0,100,50);
+				button.graphics.endFill();
+			});
+
 		}
 	}
 }
