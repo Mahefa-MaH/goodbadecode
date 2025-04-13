@@ -1,38 +1,32 @@
-**Title:**  Smalltalk: Efficient vs. Inefficient Collection Iteration
+**Title:** Efficient String Concatenation in Smalltalk
 
-**Summary:**  Efficient Smalltalk collection iteration leverages built-in methods like `do:` for optimized traversal, while inefficient approaches rely on manual indexing, which is slower and more error-prone.
+**Summary:**  Smalltalk's `Stream` class offers superior performance for string concatenation compared to repeated string appends, especially with numerous strings.  Repeated appends create many intermediate strings, while streams build one efficiently.
 
 **Good Code:**
 
 ```smalltalk
-myCollection := #(1 2 3 4 5).  "Example collection"
+stringCollection := #( 'apple' 'banana' 'cherry' 'date' ).
 
-myCollection do: [:each | 
-  Transcript show: each; cr. "Process each element efficiently"
-].
+stream := WriteStream on: String new.
+stringCollection do: [:each | stream nextPutAll: each; cr]. 
+finalString := stream contents.
+Transcript show: finalString.  "Displays the concatenated string"
 ```
 
 **Bad Code:**
 
 ```smalltalk
-myCollection := #(1 2 3 4 5).
-
-i := 1.
-[ i <= myCollection size ] whileTrue: [
-  Transcript show: (myCollection at: i); cr. "Inefficient manual indexing"
-  i := i + 1.
-].
+stringCollection := #( 'apple' 'banana' 'cherry' 'date' ).
+finalString := ''.
+stringCollection do: [:each | finalString := finalString , each , Character cr].
+Transcript show: finalString. "Displays the concatenated string"
 ```
-
 
 **Key Takeaways:**
 
-* **Performance:** The `do:` method is highly optimized for collection traversal.  Manual indexing using `at:` within a loop incurs significant overhead.
+* **Efficiency:** The good code uses a `WriteStream`, avoiding the repeated creation and garbage collection of intermediate strings that occur in the bad code.  This leads to significantly better performance, particularly with many strings.
+* **Readability:** The good code is more concise and easier to understand. The logic of adding each string and a carriage return is clearly separated.
+* **Memory Management:** The bad code creates numerous temporary strings, consuming more memory and increasing garbage collection overhead.  The stream approach minimizes this.
+* **Scalability:** The good code scales much better to larger collections of strings. The bad code's performance degrades quadratically with the number of strings.
+* **Correctness:** While both versions produce output, the bad code is less idiomatic and more prone to subtle errors with complex string manipulation.  The `WriteStream` approach is a cleaner and more reliable solution for this common task.
 
-* **Readability:** `do:` provides a concise and expressive way to iterate, enhancing code clarity.  Manual indexing makes the code more complex and harder to understand.
-
-* **Error Prevention:** Manual indexing increases the risk of off-by-one errors or index-out-of-bounds exceptions.  `do:` handles iteration boundaries automatically.
-
-* **Maintainability:**  `do:` leads to more maintainable code. Changes to the collection size don't require modification of the loop control logic as in the manual indexing approach.
-
-* **Smalltalk Idiom:** Utilizing `do:` demonstrates adherence to Smalltalk's idiomatic style, leading to more readable and understandable code for other Smalltalk developers.
