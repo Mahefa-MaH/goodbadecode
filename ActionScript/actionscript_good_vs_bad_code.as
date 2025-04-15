@@ -1,74 +1,59 @@
-// Good Code Example: Using Event Listeners and State Management for Button Clicks
+// Good Code: Using a custom event for better decoupling and maintainability.
 
-package 
+package
 {
-	import flash.display.Sprite;
-	import flash.events.MouseEvent;
+    public class GoodCodeExample extends MovieClip
+    {
+        public function GoodCodeExample()
+        {
+            addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleMyCustomEvent);
+            dispatchEvent(new MyCustomEvent(MyCustomEvent.MY_CUSTOM_EVENT, "Hello from Good Code!"));
 
-	public class GoodCodeExample extends Sprite
-	{
-		private var _button:Sprite;
-		private var _isButtonClicked:Boolean = false;
+        }
 
-		public function GoodCodeExample() 
-		{
-			_button = new Sprite();
-			_button.graphics.beginFill(0x00FF00);
-			_button.graphics.drawRect(0, 0, 100, 50);
-			_button.graphics.endFill();
-			_button.x = 50;
-			_button.y = 50;
-			addChild(_button);
+        private function handleMyCustomEvent(event:MyCustomEvent):void
+        {
+            trace("Received event: " + event.data);
+        }
 
-			_button.addEventListener(MouseEvent.CLICK, onClickHandler);
-		}
-
-		private function onClickHandler(event:MouseEvent):void
-		{
-			_isButtonClicked = !_isButtonClicked;
-			if (_isButtonClicked)
-			{
-				_button.graphics.clear();
-				_button.graphics.beginFill(0xFF0000);
-				_button.graphics.drawRect(0, 0, 100, 50);
-				_button.graphics.endFill();
-			} else {
-				_button.graphics.clear();
-				_button.graphics.beginFill(0x00FF00);
-				_button.graphics.drawRect(0, 0, 100, 50);
-				_button.graphics.endFill();
-			}
-		}
-	}
+    }
 }
 
 
-// Bad Code Example: Directly Manipulating Display List Without Event Listeners
-
-package 
+package
 {
-	import flash.display.Sprite;
+    public class MyCustomEvent extends Event
+    {
+        public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
+        public var data:String;
+        public function MyCustomEvent(type:String, data:String)
+        {
+            super(type, false, false);
+            this.data = data;
+        }
+    }
+}
 
-	public class BadCodeExample extends Sprite
-	{
-		public function BadCodeExample() 
-		{
-			var button:Sprite = new Sprite();
-			button.graphics.beginFill(0x0000FF);
-			button.graphics.drawRect(0,0,100,50);
-			button.graphics.endFill();
-			button.x = 50;
-			button.y = 50;
-			addChild(button);
 
-			//No event listener, direct manipulation - prone to errors and hard to maintain.
-			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
-				button.graphics.clear();
-				button.graphics.beginFill(0xFF0000);
-				button.graphics.drawRect(0,0,100,50);
-				button.graphics.endFill();
-			});
 
-		}
-	}
+
+// Bad Code: Tightly coupled, difficult to maintain, and lacks error handling.
+
+package
+{
+    public class BadCodeExample extends MovieClip
+    {
+        public function BadCodeExample()
+        {
+            var myVariable:String =  someFunctionThatMightFail();
+            trace(myVariable.toUpperCase()); //Potential error: NullPointerException
+        }
+
+        private function someFunctionThatMightFail():String
+        {
+            //Simulates a potential failure.  Could be a network request, file access, etc.
+            if(Math.random() < 0.5) return "some string"; else return null;
+
+        }
+    }
 }
