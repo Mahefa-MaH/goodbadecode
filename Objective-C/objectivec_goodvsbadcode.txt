@@ -1,0 +1,71 @@
+// Good Code: Using blocks for asynchronous operations and error handling
+
+#import <Foundation/Foundation.h>
+
+@interface MyDataFetcher : NSObject
+
+- (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion;
+
+@end
+
+@implementation MyDataFetcher
+
+- (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // Simulate network request
+        sleep(2);
+        NSError *error = nil;
+        NSData *data = [@"Success!" dataUsingEncoding:NSUTF8StringEncoding];
+        if (arc4random_uniform(2) == 0) { // Simulate 50% chance of error
+            error = [NSError errorWithDomain:@"MyDataFetcherErrorDomain" code:1001 userInfo:@{NSLocalizedDescriptionKey: @"Network Error"}];
+            data = nil;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(data, error);
+        });
+    });
+}
+
+@end
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        MyDataFetcher *fetcher = [[MyDataFetcher alloc] init];
+        [fetcher fetchDataWithCompletion:^(NSData *data, NSError *error) {
+            if (error) {
+                NSLog(@"Error: %@", error);
+            } else {
+                NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                NSLog(@"Data: %@", result);
+            }
+        }];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:3]];
+    }
+    return 0;
+}
+
+
+// Bad Code:  Lack of error handling and synchronous network operation (blocking the main thread)
+
+#import <Foundation/Foundation.h>
+
+@interface BadDataFetcher : NSObject
+- (NSData*)fetchData;
+@end
+
+@implementation BadDataFetcher
+- (NSData*)fetchData {
+    sleep(2); // Simulates network request, blocking the main thread
+    return [@"Success (or not)..." dataUsingEncoding:NSUTF8StringEncoding];
+}
+@end
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+      BadDataFetcher *badFetcher = [[BadDataFetcher alloc] init];
+      NSData *data = [badFetcher fetchData];
+      NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+      NSLog(@"Data: %@", result);
+    }
+    return 0;
+}
