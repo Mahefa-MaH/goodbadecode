@@ -1,81 +1,42 @@
-// Good Code: Using pattern matching for concise and efficient handling of different cases.
-def processData(data: Any): String = data match {
-  case s: String => s.toUpperCase
-  case i: Int => i.toString
-  case l: List[_] => l.mkString(",")
-  case _ => "Unknown data type"
-}
+// Good Code: Using a case class and pattern matching for efficient data processing.
+case class Data(id: Int, value: String)
 
+object GoodCode {
+  def processData(data: List[Data]): Map[Int, String] = {
+    data.map(d => (d.id, d.value)).toMap
+  }
 
-// Bad Code: Overly complex and verbose solution using multiple if-else statements.
-def processDataBad(data: Any): String = {
-  if (data.isInstanceOf[String]) {
-    data.asInstanceOf[String].toUpperCase
-  } else if (data.isInstanceOf[Int]) {
-    data.asInstanceOf[Int].toString
-  } else if (data.isInstanceOf[List[_]]) {
-    data.asInstanceOf[List[_]].mkString(",")
-  } else {
-    "Unknown data type"
+  def main(args: Array[String]): Unit = {
+    val dataList = List(Data(1, "one"), Data(2, "two"), Data(3, "three"))
+    val result = processData(dataList)
+    println(result) // Output: Map(1 -> one, 2 -> two, 3 -> three)
+
+    // Handling potential exceptions gracefully.
+    val dataListWithException = List(Data(1, "one"), Data(2, null),Data(3, "three"))
+    val resultWithExceptionHandling =  try {
+      processData(dataListWithException)
+    } catch {
+      case e: NullPointerException => println(s"Exception caught: ${e.getMessage}")
+      Map.empty[Int,String]
+    }
+    println(resultWithExceptionHandling)
   }
 }
 
 
-// Advanced Use Case:  Demonstrates how to use a monad transformer (EitherT) for error handling
-import cats.data.EitherT
-import cats.instances.either._
-import cats.instances.future._
-import cats.syntax.applicative._
-import scala.concurrent.{ExecutionContext, Future}
-
-//Good code example of EitherT
-implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
-
-def fetchData(id: Int): EitherT[Future, String, Int] = {
-  EitherT(Future {
-    if (id > 0) Right(id * 2) else Left("Invalid ID")
-  })
-}
-
-def processData(data: Int): EitherT[Future, String, String] = {
-  EitherT(Future {
-    if(data > 10) Right(data.toString) else Left("Data too small")
-  })
-}
-
-
-def main(args:Array[String]):Unit = {
-  fetchData(5).flatMap(processData).value.map(println)
-  fetchData(-1).flatMap(processData).value.map(println)
-}
-
-//Bad Code Example of EitherT:  Excessive nesting and lack of composition
-def fetchDataBad(id: Int): Future[Either[String, Int]] = Future {
-  if (id > 0) Right(id * 2) else Left("Invalid ID")
-}
-
-def processDataBad(data: Int): Future[Either[String, String]] = Future {
-  if (data > 10) Right(data.toString) else Left("Data too small")
-}
-
-def mainBad(args: Array[String]): Unit = {
-  fetchDataBad(5).flatMap(result =>
-    result match {
-      case Right(data) => processDataBad(data).map(result2 => result2 match {
-        case Right(finalResult) => println(finalResult)
-        case Left(error) => println(error)
-      })
-      case Left(error) => Future {println(error)}
+// Bad Code:  Inefficient and error-prone approach.
+object BadCode {
+  def processData(data: List[(Int, String)]): Map[Int, String] = {
+    val map = new scala.collection.mutable.HashMap[Int, String]()
+    for (element <- data) {
+      map.put(element._1, element._2)
     }
-  )
-  fetchDataBad(-1).flatMap(result =>
-    result match {
-      case Right(data) => processDataBad(data).map(result2 => result2 match {
-        case Right(finalResult) => println(finalResult)
-        case Left(error) => println(error)
-      })
-      case Left(error) => Future {println(error)}
-    }
-  )
-}
+    map.toMap
+  }
 
+  def main(args: Array[String]): Unit = {
+    val dataList = List((1, "one"), (2, "two"), (3, "three"))
+    val result = processData(dataList)
+    println(result) //Output: Map(1 -> one, 2 -> two, 3 -> three)
+  }
+}
