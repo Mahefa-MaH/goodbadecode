@@ -1,48 +1,64 @@
-// Good Sass: Using modules and mixins for maintainability and reusability
+// Good Sass: Using Mixins and Functions for Maintainability and Reusability
 
-@use "functions" as *; // Import custom functions module
-
-@mixin button-style($color, $size) {
+@mixin button-style($color, $size: 1em) {
   background-color: $color;
-  padding: rem-calc($size); // Using a custom function for rem calculation
+  padding: 0.5em $size;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 0.25em;
   cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
-
-.button {
-  @include button-style(blue, 16px);
-}
-
-
-.button--large {
-  @include button-style(green, 24px);
-}
-
-
-// Bad Sass: Lack of organization and reusability
-
-.button {
-  background-color: blue;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.button--large {
-  background-color: green;
-  padding: 15px 30px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-
-// functions.scss (Example of a functions module)
-
-@function rem-calc($px) {
+@function rem($px) {
   @return $px / 16 + rem;
 }
 
+.primary-button {
+  @include button-style(blue);
+}
+
+.secondary-button {
+  @include button-style(green, 1.5em);
+}
+
+.button-container {
+  width: rem(320px);
+}
+
+
+// Bad Sass: Repetitive and Inconsistent Styles
+
+.primary-button {
+  background-color: blue;
+  padding: 0.5em 1em;
+  border: none;
+  border-radius: 0.25em;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.secondary-button {
+  background-color: green;
+  padding: 0.5em 1.5em;
+  border: none;
+  border-radius: 0.25em;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.another-button {
+  background-color: red;
+  padding: 0.5em 2em;
+  border: none;
+  border-radius: 0.25em;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
+}
