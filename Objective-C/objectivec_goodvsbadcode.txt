@@ -1,71 +1,72 @@
-// Good Code: Using blocks for asynchronous operations and error handling
+// Good Code: Using blocks for asynchronous operations and proper error handling
 
-#import <Foundation/Foundation.h>
+@interface MyViewController : UIViewController
 
-@interface MyDataFetcher : NSObject
-
-- (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion;
+@property (nonatomic, strong) NSURLSessionDataTask *dataTask;
 
 @end
 
-@implementation MyDataFetcher
+@implementation MyViewController
 
-- (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate network request
-        sleep(2);
-        NSError *error = nil;
-        NSData *data = [@"Success!" dataUsingEncoding:NSUTF8StringEncoding];
-        if (arc4random_uniform(2) == 0) { // Simulate 50% chance of error
-            error = [NSError errorWithDomain:@"MyDataFetcherErrorDomain" code:1001 userInfo:@{NSLocalizedDescriptionKey: @"Network Error"}];
-            data = nil;
-        }
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    NSURL *url = [NSURL URLWithString:@"https://api.example.com/data"];
+    NSURLSession *session = [NSURLSession sharedSession];
+
+    self.dataTask = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(data, error);
-        });
-    });
-}
-
-@end
-
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        MyDataFetcher *fetcher = [[MyDataFetcher alloc] init];
-        [fetcher fetchDataWithCompletion:^(NSData *data, NSError *error) {
             if (error) {
                 NSLog(@"Error: %@", error);
-            } else {
-                NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                NSLog(@"Data: %@", result);
+                // Handle error appropriately, e.g., show an alert to the user
+                return;
             }
-        }];
-        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:3]];
-    }
-    return 0;
+
+            if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+                if (httpResponse.statusCode == 200) {
+                    // Process the data
+                    NSError *jsonError;
+                    NSDictionary *jsonData = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+                    if (jsonError) {
+                        NSLog(@"JSON Error: %@", jsonError);
+                        return;
+                    }
+                    //Further processing of jsonData
+                } else {
+                    NSLog(@"HTTP Error: %ld", (long)httpResponse.statusCode);
+                    // Handle HTTP error
+                }
+            }
+        });
+    }];
+
+    [self.dataTask resume];
 }
 
+- (void)dealloc {
+    [self.dataTask cancel];
+}
 
-// Bad Code:  Lack of error handling and synchronous network operation (blocking the main thread)
-
-#import <Foundation/Foundation.h>
-
-@interface BadDataFetcher : NSObject
-- (NSData*)fetchData;
 @end
 
-@implementation BadDataFetcher
-- (NSData*)fetchData {
-    sleep(2); // Simulates network request, blocking the main thread
-    return [@"Success (or not)..." dataUsingEncoding:NSUTF8StringEncoding];
-}
-@end
 
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-      BadDataFetcher *badFetcher = [[BadDataFetcher alloc] init];
-      NSData *data = [badFetcher fetchData];
-      NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-      NSLog(@"Data: %@", result);
+
+// Bad Code: Ignoring errors and using deprecated methods
+
+@interface MyBadViewController : UIViewController @end
+
+@implementation MyBadViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    NSURL *url = [NSURL URLWithString:@"https://api.example.com/data"];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil]; // Deprecated and ignores errors
+
+    if (data) {
+        //Process Data without error handling
     }
-    return 0;
 }
+
+@end
