@@ -1,13 +1,13 @@
-// Good Sass: Using Mixins and Functions for Maintainability and Reusability
+// Good Sass: Using mixins and functions for maintainability and reusability
 
 @mixin button-style($color, $size: 1em) {
   background-color: $color;
   padding: 0.5em $size;
   border: none;
-  border-radius: 0.25em;
+  border-radius: 0.2em;
   cursor: pointer;
   &:hover {
-    opacity: 0.8;
+    background-color: darken($color, 10%);
   }
 }
 
@@ -15,50 +15,36 @@
   @return $px / 16 + rem;
 }
 
-.primary-button {
-  @include button-style(blue);
+
+.good-button {
+  @include button-style(blue, 1.2em);
 }
 
-.secondary-button {
-  @include button-style(green, 1.5em);
-}
-
-.button-container {
-  width: rem(320px);
+.good-button-2 {
+  @include button-style(green, rem(20));
 }
 
 
-// Bad Sass: Repetitive and Inconsistent Styles
+// Bad Sass: Repetitive code and lack of organization
 
-.primary-button {
-  background-color: blue;
+.bad-button {
+  background-color: red;
   padding: 0.5em 1em;
   border: none;
-  border-radius: 0.25em;
+  border-radius: 0.2em;
   cursor: pointer;
   &:hover {
-    opacity: 0.8;
+    background-color: darken(red, 10%);
   }
 }
 
-.secondary-button {
-  background-color: green;
+.bad-button-2 {
+  background-color: yellow;
   padding: 0.5em 1.5em;
   border: none;
-  border-radius: 0.25em;
+  border-radius: 0.2em;
   cursor: pointer;
   &:hover {
-    opacity: 0.8;
-  }
-}
-
-.another-button {
-  background-color: red;
-  padding: 0.5em 2em;
-  border: none;
-  border-radius: 0.25em;
-  cursor: pointer;
-  &:hover {
-    opacity: 0.8;
+    background-color: darken(yellow, 10%);
   }
 }
