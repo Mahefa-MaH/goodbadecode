@@ -1,59 +1,43 @@
-// Good Code: Using a custom event for better decoupling and maintainability.
+// Good Code: Using Event Listeners and Custom Events for Modular Design
 
 package
 {
-    public class GoodCodeExample extends MovieClip
-    {
-        public function GoodCodeExample()
-        {
-            addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleMyCustomEvent);
-            dispatchEvent(new MyCustomEvent(MyCustomEvent.MY_CUSTOM_EVENT, "Hello from Good Code!"));
+	public class GoodCodeExample extends MovieClip
+	{
+		public function GoodCodeExample()
+		{
+			// Register event listener for a custom event
+			addEventListener("myCustomEvent", handleCustomEvent);
 
-        }
+			// Dispatch the custom event after a delay
+			setTimeout(dispatchEvent(new Event("myCustomEvent")), 2000);
+		}
 
-        private function handleMyCustomEvent(event:MyCustomEvent):void
-        {
-            trace("Received event: " + event.data);
-        }
-
-    }
+		private function handleCustomEvent(event:Event):void
+		{
+			trace("Custom event received!");
+		}
+	}
 }
 
+
+// Bad Code: Tight Coupling and Inflexible Design
 
 package
 {
-    public class MyCustomEvent extends Event
-    {
-        public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
-        public var data:String;
-        public function MyCustomEvent(type:String, data:String)
-        {
-            super(type, false, false);
-            this.data = data;
-        }
-    }
+	public class BadCodeExample extends MovieClip
+	{
+		private var myVariable:String = "Hello";
+
+		public function BadCodeExample()
+		{
+			// Directly manipulating another object's property.  Tight Coupling!
+			this.myVariable = "world";
+			someOtherObject.myProperty = this.myVariable;
+		}
+	}
 }
 
+// Note: someOtherObject needs to be defined elsewhere in a proper application context for the above to work. This is just a snippet to illustrate a concept.
 
 
-
-// Bad Code: Tightly coupled, difficult to maintain, and lacks error handling.
-
-package
-{
-    public class BadCodeExample extends MovieClip
-    {
-        public function BadCodeExample()
-        {
-            var myVariable:String =  someFunctionThatMightFail();
-            trace(myVariable.toUpperCase()); //Potential error: NullPointerException
-        }
-
-        private function someFunctionThatMightFail():String
-        {
-            //Simulates a potential failure.  Could be a network request, file access, etc.
-            if(Math.random() < 0.5) return "some string"; else return null;
-
-        }
-    }
-}
