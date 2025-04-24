@@ -1,30 +1,42 @@
 program good_code
   implicit none
   integer, allocatable :: arr(:)
-  integer :: n, i, sum
+  integer :: n, i, sum, err
   
-  ! Get the array size from the user.
-  print *, "Enter the number of elements:"
-  read *, n
-  
-  ! Allocate memory for the array.  Error handling included.
-  allocate(arr(n), stat=i)
-  if (i /= 0) then
-    print *, "Allocation failed!"
+  ! Get array size from user.  Error handling included.
+  print *, "Enter the size of the array:"
+  read(*,*,iostat=err) n
+  if (err /= 0) then
+    print *, "Invalid input. Exiting."
     stop
   end if
 
-  ! Read array elements.
-  print *, "Enter the elements:"
-  read *, (arr(i), i=1, n)
+  ! Allocate array dynamically.
+  allocate(arr(n), stat=err)
+  if (err /= 0) then
+    print *, "Memory allocation failed. Exiting."
+    stop
+  end if
 
-  ! Calculate the sum.
-  sum = sum(arr)
+  ! Populate array.  Handles potential errors during input.
+  print *, "Enter the array elements:"
+  do i = 1, n
+    read(*,*,iostat=err) arr(i)
+    if (err /= 0) then
+      print *, "Invalid input. Exiting."
+      deallocate(arr)
+      stop
+    end if
+  end do
 
-  ! Print the sum.
-  print *, "Sum:", sum
+  ! Calculate sum.
+  sum = 0
+  do i = 1, n
+    sum = sum + arr(i)
+  end do
 
-  ! Deallocate the array.
+  ! Print sum and deallocate array.
+  print *, "Sum of array elements:", sum
   deallocate(arr)
 
 end program good_code
@@ -33,18 +45,21 @@ end program good_code
 program bad_code
   implicit none
   integer :: arr(100), n, i, sum
-  
-  print *, "Enter the number of elements (max 100):"
-  read *, n
 
-  print *, "Enter the elements:"
-  read *, (arr(i), i=1, n)
+  print *, "Enter the size of the array:"
+  read(*,*) n
+
+  !No check for n exceeding array bounds!
+  print *, "Enter the array elements:"
+  do i = 1, n
+    read(*,*) arr(i)
+  end do
 
   sum = 0
   do i = 1, n
     sum = sum + arr(i)
   end do
 
-  print *, "Sum:", sum
+  print *, "Sum of array elements:", sum
 
 end program bad_code
