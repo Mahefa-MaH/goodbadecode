@@ -1,48 +1,30 @@
 **Title:** Efficient String Concatenation in Smalltalk
 
-**Summary:**  Smalltalk's `String` class offers efficient concatenation methods avoiding repeated object creation inherent in naive string addition.  This comparison highlights the performance and memory management differences between these approaches.
-
+**Summary:**  Smalltalk's string concatenation using `+` can be inefficient for many concatenations.  The `String stream` approach provides significantly better performance, especially when dealing with a large number of strings.
 
 **Good Code:**
 
 ```smalltalk
-string1 := 'Hello'.
-string2 := 'World'.
-concatenatedString := string1 , string2.  "Using the ',' operator for efficient concatenation"
-Transcript show: concatenatedString; cr. "Output: HelloWorld"
-
-"Alternative using string concatenation method"
-concatenatedString2 := string1 , string2.
-Transcript show: concatenatedString2; cr. "Output: HelloWorld"
-
-"For multiple strings, use collect"
-strings := #('This' 'is' 'a' 'test').
-concatenatedString3 := strings collect: [:each | each] join: ''.
-Transcript show: concatenatedString3; cr. "Output: Thisisatest"
+stringStream := WriteStream on: String new.
+1 to: 1000 do: [:i | stringStream nextPutAll: 'Iteration: ', i printString; cr].
+result := stringStream contents.  "Efficient concatenation"
 ```
 
 **Bad Code:**
 
 ```smalltalk
-string1 := 'Hello'.
-string2 := 'World'.
-concatenatedString := string1.
-concatenatedString := concatenatedString , string2. "Inefficient repeated object creation"
-Transcript show: concatenatedString; cr.  "Output: HelloWorld but inefficient"
-
-"Another inefficient approach with repeated string concatenation"
-concatenatedString := 'Hello'.
-concatenatedString := concatenatedString + ' World'.  "Even worse, using '+' operator"
-concatenatedString := concatenatedString + '!'.
-Transcript show: concatenatedString; cr.  "Output: Hello World! but terribly inefficient"
+result := ''.
+1 to: 1000 do: [:i | result := result , 'Iteration: ', i printString, Character cr]. "Inefficient concatenation"
 ```
 
 
 **Key Takeaways:**
 
-* **Efficiency:** The `,` operator (and the `join:` method) in the "Good Code" example performs concatenation in a more efficient manner, minimizing object creation and memory allocation.  The "Bad Code" examples repeatedly create new strings, leading to significant performance degradation, especially with many concatenations.
-* **Readability:** The `,` operator and `join:` method make the code cleaner and easier to understand, reflecting the intent more directly than repeatedly reassigning variables.
-* **Memory Management:**  The repeated object creation in the bad examples stresses the garbage collector, particularly in loops or large-scale string manipulations. The good code is more memory-friendly.
-* **Maintainability:** The concise nature of the good code makes it easier to maintain and debug.  The verbose, repeated assignments in the bad code make it harder to follow and identify errors.
+* **Efficiency:** The `WriteStream` approach avoids repeated string object creation.  Each `+` operation in the bad code creates a new string object, leading to significant overhead, especially with many iterations. The `WriteStream` builds the string in place.
+* **Memory Management:** The bad code's repeated string creation consumes more memory and increases garbage collection cycles, impacting performance.
+* **Readability:** While both examples are reasonably readable, the `WriteStream` approach becomes clearer with larger concatenation tasks.  It directly expresses the intent of building a string incrementally.
+* **Scalability:** The `WriteStream` method scales much better to large numbers of concatenations.  The time complexity of the bad code grows quadratically with the number of strings, whereas the `WriteStream` method is closer to linear.
+* **Conciseness:** Once you're familiar with `WriteStream`, this method is generally considered more concise and expressive for many concatenations than repeated use of `+`.
 
 
+**Note:**  The `printString` method is used in both examples to convert the integer `i` into its string representation. This is a Smalltalk idiom.  Other approaches might exist depending on the specific Smalltalk dialect used.
