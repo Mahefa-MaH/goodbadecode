@@ -1,43 +1,55 @@
-// Good Code: Using Event Listeners and Custom Events for Modular Design
+// Good Code: Using strongly-typed variables and a custom event for better code organization and maintainability.
 
 package
 {
 	public class GoodCodeExample extends MovieClip
 	{
+		private var _score:int = 0;
+
 		public function GoodCodeExample()
 		{
-			// Register event listener for a custom event
-			addEventListener("myCustomEvent", handleCustomEvent);
-
-			// Dispatch the custom event after a delay
-			setTimeout(dispatchEvent(new Event("myCustomEvent")), 2000);
+			addEventListener(ScoreChangeEvent.SCORE_CHANGED, onScoreChanged);
+			//Simulate score update
+			dispatchEvent(new ScoreChangeEvent(ScoreChangeEvent.SCORE_CHANGED, 10));
 		}
 
-		private function handleCustomEvent(event:Event):void
+		private function onScoreChanged(event:ScoreChangeEvent):void
 		{
-			trace("Custom event received!");
+			_score += event.scoreDelta;
+			trace("Score updated: ", _score);
 		}
+
 	}
 }
-
-
-// Bad Code: Tight Coupling and Inflexible Design
 
 package
 {
-	public class BadCodeExample extends MovieClip
+	public class ScoreChangeEvent extends Event
 	{
-		private var myVariable:String = "Hello";
+		public static const SCORE_CHANGED:String = "scoreChanged";
+		public var scoreDelta:int;
 
-		public function BadCodeExample()
+		public function ScoreChangeEvent(type:String, scoreDelta:int)
 		{
-			// Directly manipulating another object's property.  Tight Coupling!
-			this.myVariable = "world";
-			someOtherObject.myProperty = this.myVariable;
+			super(type);
+			this.scoreDelta = scoreDelta;
 		}
 	}
 }
 
-// Note: someOtherObject needs to be defined elsewhere in a proper application context for the above to work. This is just a snippet to illustrate a concept.
 
+// Bad Code: Loose typing, mixing data and display logic, and lack of event handling making it harder to maintain and debug.
 
+package 
+{
+	public class BadCodeExample extends MovieClip
+	{
+		public function BadCodeExample()
+		{
+			var score:Object = 0; //Loose typing
+			score = score + 10;
+			this.scoreText.text = "Score: " + score; //Mixing data and display logic
+
+		}
+	}
+}
