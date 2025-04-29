@@ -1,52 +1,43 @@
-// Good Code: Using a custom event for better decoupling and maintainability.
+// Good Code: Using a custom event for better code organization and maintainability.
 
-package
+package 
 {
-	import flash.events.Event;
-	import flash.events.EventDispatcher;
-
-	public class GoodCodeExample extends EventDispatcher
+	public class GoodCodeExample extends MovieClip
 	{
 		public function GoodCodeExample()
 		{
-			addEventListener("dataReady", onDataReady);
+			addEventListener("myCustomEvent", handleMyCustomEvent);
+			dispatchEvent(new Event("myCustomEvent"));
 		}
 
-		public function fetchData():void
+		private function handleMyCustomEvent(event:Event):void
 		{
-			// Simulate fetching data
-			var data:String = "Data fetched successfully!";
-			dispatchEvent(new Event("dataReady"));
-		}
-
-
-		private function onDataReady(event:Event):void
-		{
-			trace("Data received: " + event.type);
+			trace("Custom event handled successfully!");
 		}
 	}
 }
 
 
-// Bad Code: Tightly coupled code with direct method calls, hindering reusability and testability
+// Bad Code: Tightly coupled code with direct function calls, resulting in poor organization and reduced reusability.
 
-package
+package 
 {
-	public class BadCodeExample
+	public class BadCodeExample extends MovieClip
 	{
-		private var dataProcessor:DataProcessor = new DataProcessor();
-
 		public function BadCodeExample()
 		{
-			dataProcessor.processData();
+			doSomething();
 		}
-	}
 
-	internal class DataProcessor
-	{
-		public function processData():void
+		private function doSomething():void
 		{
-			trace("Processing data directly...");
+			trace("Something happened...");
+			anotherFunction();
+		}
+
+		private function anotherFunction():void
+		{
+			trace("Another thing happened...");
 		}
 	}
 }
