@@ -1,48 +1,54 @@
-// Good Sass: Using mixins for reusable styles and nesting for organization
+// Good Sass: Using mixins for reusable styles and modularity
 
 @mixin button-style($color, $background-color) {
-  padding: 10px 20px;
-  border: 2px solid $color;
-  background-color: $background-color;
   color: $color;
+  background-color: $background-color;
+  padding: 10px 20px;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+
   &:hover {
     background-color: darken($background-color, 10%);
   }
 }
 
-.button-primary {
-  @include button-style(blue, white);
+.primary-button {
+  @include button-style(white, #3498db);
 }
 
-.button-secondary {
-  @include button-style(white, blue);
+.secondary-button {
+  @include button-style(black, #f39c12);
 }
 
 
-// Bad Sass: Repeating styles and lack of organization
+// Bad Sass:  Repetitive code and lack of modularity
 
-.button-primary {
+.primary-button {
+  color: white;
+  background-color: #3498db;
   padding: 10px 20px;
-  border: 2px solid blue;
-  background-color: white;
-  color: blue;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+
   &:hover {
-    background-color: #e0f2f7; //Hardcoded value, less maintainable
+    background-color: darken(#3498db, 10%);
   }
 }
 
-.button-secondary {
+.secondary-button {
+  color: black;
+  background-color: #f39c12;
   padding: 10px 20px;
-  border: 2px solid white;
-  background-color: blue;
-  color: white;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+
   &:hover {
-    background-color: #6992b2; //Hardcoded value, less maintainable
+    background-color: darken(#f39c12, 10%);
   }
 }
