@@ -1,43 +1,64 @@
-// Good Code: Using a custom event for better code organization and maintainability.
-
-package 
+// Good Code: Using a custom event for better decoupling and maintainability.
+package
 {
 	public class GoodCodeExample extends MovieClip
 	{
 		public function GoodCodeExample()
 		{
-			addEventListener("myCustomEvent", handleMyCustomEvent);
-			dispatchEvent(new Event("myCustomEvent"));
+			addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleCustomEvent);
 		}
 
-		private function handleMyCustomEvent(event:Event):void
+		private function handleCustomEvent(event:MyCustomEvent):void
 		{
-			trace("Custom event handled successfully!");
+			trace("Custom Event Received: " + event.data);
+		}
+	}
+}
+
+package
+{
+	public class MyCustomEvent extends Event
+	{
+		public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
+		public var data:String;
+
+		public function MyCustomEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
+		{
+			super(type, bubbles, cancelable);
+			this.data = data;
 		}
 	}
 }
 
 
-// Bad Code: Tightly coupled code with direct function calls, resulting in poor organization and reduced reusability.
-
-package 
+// Bad Code: Tight coupling and poor error handling.
+package
 {
 	public class BadCodeExample extends MovieClip
 	{
 		public function BadCodeExample()
 		{
-			doSomething();
+			var myObject:MyObject = new MyObject();
+			try
+			{
+				trace(myObject.someMethod());
+			}
+			catch(error:Error)
+			{
+				// Poor error handling
+				trace("An error occurred!");
+			}
 		}
+	}
+}
 
-		private function doSomething():void
+package
+{
+	public class MyObject
+	{
+		public function someMethod():String
 		{
-			trace("Something happened...");
-			anotherFunction();
-		}
-
-		private function anotherFunction():void
-		{
-			trace("Another thing happened...");
+			return "Some value"; //Can throw error here.
 		}
 	}
 }
