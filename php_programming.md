@@ -1,92 +1,104 @@
-**Title:** Secure PHP User Input Handling: Safe vs. Risky
+**Title:** Secure PHP User Authentication: Good vs. Bad Practices
 
-**Summary:**  The key difference lies in parameterized queries (prepared statements) for database interactions and proper input sanitization for preventing Cross-Site Scripting (XSS) and SQL injection vulnerabilities.  Failing to use these techniques exposes applications to severe security risks.
-
+**Summary:**  The primary difference lies in secure password hashing and input sanitization.  Good code employs parameterized queries and bcrypt hashing to prevent SQL injection and weak password vulnerabilities, while bad code is susceptible to these common attacks.
 
 **Good Code:**
 
 ```php
 <?php
 
-// Database credentials (should be stored securely, not hardcoded!)
+// Database credentials (should be in a separate config file!)
 $db_host = 'localhost';
 $db_user = 'your_username';
 $db_pass = 'your_password';
 $db_name = 'your_database';
 
-// Create a database connection
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+// Secure connection
+$pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+function registerUser($username, $password, $pdo) {
+    // Sanitize inputs
+    $username = htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); 
+    
+    // Hash password using bcrypt
+    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
+    // Prepared statement to prevent SQL injection
+    $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+    $stmt->execute([$username, $hashed_password]);
+
+    return true;
+}
+
+function loginUser($username, $password, $pdo) {
+    $stmt = $pdo->prepare("SELECT password FROM users WHERE username = ?");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['password'])) {
+        return true; 
+    } else {
+        return false;
+    }
 }
 
 
-// Sanitize user input
-$username = $conn->real_escape_string($_POST['username']);
-$email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-
-
-// Prepare and execute a parameterized query (Prepared Statement)
-$stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND email = ?");
-$stmt->bind_param("ss", $username, $email);
-$stmt->execute();
-$result = $stmt->get_result();
-
-
-if ($result->num_rows > 0) {
-    echo "User found!";
-} else {
-    echo "User not found.";
+// Example usage (replace with actual form handling)
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+  
+    if (registerUser($username, $password, $pdo)) {
+        echo "User registered successfully!";
+    } else {
+        echo "Registration failed.";
+    }
 }
-
-$stmt->close();
-$conn->close();
 
 ?>
 ```
+
 
 **Bad Code:**
 
 ```php
 <?php
-
-// Vulnerable code - DO NOT USE
 $db_host = 'localhost';
 $db_user = 'your_username';
 $db_pass = 'your_password';
 $db_name = 'your_database';
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+$conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
 }
 
-$username = $_POST['username'];
-$email = $_POST['email'];
 
-$sql = "SELECT * FROM users WHERE username = '$username' AND email = '$email'";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    echo "User found!";
-} else {
-    echo "User not found.";
+function registerUser($username, $password) {
+    $password = md5($password); // Weak hashing!
+    $sql = "INSERT INTO users (username, password) VALUES ('$username', '$password')"; // SQL Injection vulnerability
+    if (mysqli_query($conn, $sql)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
-$conn->close();
+// ... similar insecure login function ...
 
 ?>
 ```
 
+
 **Key Takeaways:**
 
-* **SQL Injection Prevention:** The good code uses prepared statements, preventing SQL injection vulnerabilities by separating data from SQL code. The bad code directly concatenates user input into the SQL query, making it highly vulnerable.
-* **XSS Prevention:** While not explicitly shown in the database query example, the good code demonstrates proper input sanitization using `mysqli_real_escape_string()` for the username and `filter_var()` for email, mitigating Cross-Site Scripting risks.  The bad code lacks any input sanitization, leaving it wide open to XSS attacks.
-* **Security Best Practices:** The good code follows secure coding principles by using parameterized queries and input sanitization, protecting against common web application vulnerabilities. The bad code is directly susceptible to both SQL injection and XSS attacks.
-* **Maintainability and Readability:** The good code is more organized and easier to understand, making it simpler to maintain and debug.  The bad code is less readable and more prone to errors.
-* **Error Handling:** Both versions include basic error handling for the database connection.  Robust error handling should be expanded upon in a production environment.
+* **Prepared Statements (Parameterized Queries):**  The good code uses prepared statements to prevent SQL injection vulnerabilities.  The bad code directly inserts user input into the SQL query, making it vulnerable to attacks.
+* **Secure Password Hashing:** The good code uses `password_hash()` with bcrypt, a strong one-way hashing algorithm that protects against rainbow table attacks. The bad code uses `md5()`, which is easily cracked.
+* **Input Sanitization:** The good code uses `htmlspecialchars()` to prevent cross-site scripting (XSS) attacks.  The bad code lacks any input sanitization.
+* **Error Handling:** The good code uses PDO's exception handling for robust error management. The bad code's error handling is minimal.
+* **Database Connection:** While not explicitly highlighted, using PDO in the good example generally offers advantages in terms of security and features over `mysqli`.  Best practice would be to use a more robust connection management solution.
 
 
-Remember to replace placeholder database credentials with your actual values.  Always prioritize security when handling user input in PHP applications.
+This example demonstrates fundamental security principles. In a real-world application, additional measures like input validation, output encoding, and session management would be crucial. Remember to store your database credentials securely, preferably in a configuration file outside of your web root.
