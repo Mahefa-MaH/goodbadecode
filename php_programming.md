@@ -1,78 +1,97 @@
-**Title:** Efficient String Manipulation in PHP: Secure vs. Insecure Approaches
+**Title:** Secure PHP User Authentication: Good vs. Bad Practices
 
-**Summary:**  The key difference lies in how these code snippets handle potential security vulnerabilities. Good code utilizes parameterized queries to prevent SQL injection, while bad code directly concatenates user input, creating a significant security risk.
+**Summary:**  The key difference lies in how user input is handled and sanitized to prevent SQL injection and cross-site scripting (XSS) vulnerabilities.  Good code utilizes parameterized queries and escaping techniques, while bad code directly incorporates user input into SQL queries, creating significant security risks.
+
 
 **Good Code:**
 
 ```php
 <?php
 
-function searchDatabase($searchTerm) {
-    $mysqli = new mysqli("localhost", "user", "password", "database"); // Replace with your credentials
+// Database credentials (should be stored securely, not hardcoded!)
+$db_host = "localhost";
+$db_user = "your_username";
+$db_pass = "your_password";
+$db_name = "your_database";
 
-    if ($mysqli->connect_error) {
-        die("Connection failed: " . $mysqli->connect_error);
-    }
-
-    $stmt = $mysqli->prepare("SELECT * FROM users WHERE username LIKE ?");
-    $stmt->bind_param("s", $searchTerm); // Prevents SQL Injection
-    $searchTerm = "%" . $searchTerm . "%"; // Add wildcards for LIKE search
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    while ($row = $result->fetch_assoc()) {
-        // Process the results securely
-        echo "Username: " . $row["username"] . "<br>"; 
-    }
-
-    $stmt->close();
-    $mysqli->close();
+// Establish database connection
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
 }
 
-//Example usage (sanitize input appropriately in a real application)
-$safeSearchTerm = filter_input(INPUT_GET, 'search', FILTER_SANITIZE_STRING); 
-searchDatabase($safeSearchTerm);
+// Sanitize user inputs
+$username = $_POST["username"] ?? '';
+$password = $_POST["password"] ?? '';
+
+$username = $conn->real_escape_string($username); // Escape string for SQL query
+$password = password_hash($password, PASSWORD_DEFAULT); // Hash password securely
+
+// Prepared statement to prevent SQL injection
+$stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND password = ?");
+$stmt->bind_param("ss", $username, $password);
+$stmt->execute();
+$stmt->bind_result($user_id);
+$stmt->fetch();
+
+if ($stmt->num_rows > 0) {
+    session_start();
+    $_SESSION["user_id"] = $user_id;
+    header("Location: dashboard.php");
+    exit();
+} else {
+    echo "Invalid username or password.";
+}
+
+$stmt->close();
+$conn->close();
 
 ?>
 ```
+
 
 **Bad Code:**
 
 ```php
 <?php
 
-function searchDatabaseInsecure($searchTerm) {
-    $mysqli = new mysqli("localhost", "user", "password", "database"); // Replace with your credentials
+// Database credentials (insecurely hardcoded)
+$db_host = "localhost";
+$db_user = "your_username";
+$db_pass = "your_password";
+$db_name = "your_database";
 
-    if ($mysqli->connect_error) {
-        die("Connection failed: " . $mysqli->connect_error);
-    }
+// Establish database connection
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
-    $query = "SELECT * FROM users WHERE username LIKE '" . $searchTerm . "'"; // VULNERABLE TO SQL INJECTION
-    $result = $mysqli->query($query);
+// Unsecured user input directly embedded into query
+$username = $_POST["username"];
+$password = $_POST["password"];
 
-    while ($row = $result->fetch_assoc()) {
-        echo "Username: " . $row["username"] . "<br>";
-    }
+$sql = "SELECT id FROM users WHERE username = '$username' AND password = '$password'";
+$result = $conn->query($sql);
 
-    $mysqli->close();
+if ($result->num_rows > 0) {
+  // Proceed with session management (vulnerable)
+  session_start();
+  // ...
+} else {
+  echo "Invalid username or password";
 }
 
-
-//Example usage (HIGHLY insecure - never do this!)
-$unsafeSearchTerm = $_GET['search']; // Directly uses unsanitized input
-searchDatabaseInsecure($unsafeSearchTerm);
+$conn->close();
 
 ?>
 ```
 
+
 **Key Takeaways:**
 
-* **SQL Injection Prevention:** The good code uses prepared statements with `bind_param()`, preventing SQL injection vulnerabilities.  The bad code directly concatenates user input into the SQL query, making it susceptible to malicious attacks.
-* **Sanitized Input:** The good code demonstrates (though incompletely - full input validation is needed in production) the importance of sanitizing user input before using it in database queries. The bad code completely omits this crucial step.
-* **Error Handling:** Both examples include basic error handling for database connection failures.  Production code would require more robust error handling and logging.
-* **Resource Management:**  Both examples close database connections properly, preventing resource leaks.  In larger applications, using try-catch blocks is recommended for more reliable resource management.
-* **Readability and Maintainability:** The good code is more organized and easier to understand and maintain than the bad code.  Prepared statements improve code clarity and structure.
+* **Prepared Statements:** The good code uses prepared statements, preventing SQL injection. This is crucial because it separates the SQL query structure from the user-supplied data, preventing malicious code from being executed.
+* **Input Sanitization:** `mysqli_real_escape_string()` in the good code escapes special characters in user input, reducing the risk of SQL injection.  The bad code lacks this crucial step.
+* **Password Hashing:** The good code uses `password_hash()` to securely store passwords, making them resistant to cracking.  The bad code stores passwords in plain text, highly vulnerable to attacks.
+* **Error Handling:** While both examples include basic error handling for database connection, robust error handling should be more comprehensive, logging errors and preventing sensitive information exposure.
+* **Secure Credentials:**  The good code emphasizes that database credentials *should not* be hardcoded directly in the script; this is a critical security vulnerability.  The bad code demonstrates this dangerous practice.
+* **Session Management:**  While omitted for brevity, good session management is essential to prevent session hijacking, including using secure cookies and appropriate session timeouts.
 
 
-**Note:**  Remember to replace `"localhost"`, `"user"`, `"password"`, and `"database"` with your actual database credentials.  This example is for illustrative purposes; always implement thorough input validation and security measures in a real-world application.  Using a framework like Laravel or Symfony is highly recommended for building secure PHP applications.
