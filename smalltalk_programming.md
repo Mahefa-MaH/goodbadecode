@@ -1,30 +1,47 @@
 **Title:** Efficient String Concatenation in Smalltalk
 
-**Summary:**  Smalltalk's string concatenation using `+` can be inefficient for many concatenations.  The `String stream` approach provides significantly better performance, especially when dealing with a large number of strings.
+**Summary:**  Smalltalk's `Stream` provides superior performance for string concatenation compared to repeated `+` operations due to its optimized buffer management, avoiding repeated string object creation.  The `+` operator leads to quadratic time complexity in the worst case.
 
-**Good Code:**
 
-```smalltalk
-stringStream := WriteStream on: String new.
-1 to: 1000 do: [:i | stringStream nextPutAll: 'Iteration: ', i printString; cr].
-result := stringStream contents.  "Efficient concatenation"
-```
-
-**Bad Code:**
+**Good Code (Using a Stream):**
 
 ```smalltalk
-result := ''.
-1 to: 1000 do: [:i | result := result , 'Iteration: ', i printString, Character cr]. "Inefficient concatenation"
+string := 'a'.
+1 to: 10000 do: [:i | string := string , i printString]. "Inefficient"
+
+string2 := WriteStream on: String new.
+1 to: 10000 do: [:i | string2 nextPutAll: i printString].
+string2 contents. "Efficient"
+
+
+"Example with more complex string creation"
+writeStringStream := WriteStream on: String new.
+(1 to: 100) do: [:i | 
+  writeStringStream nextPutAll: 'This is string number: ';
+  writeStringStream nextPutAll: i printString;
+  writeStringStream nextPutAll: ' - ';
+  writeStringStream nextPutAll: (i*i) printString;
+  writeStringStream cr
+].
+
+resultString := writeStringStream contents.
+Transcript show: resultString.
+
 ```
 
+**Bad Code (Using Repeated `+`):**
+
+```smalltalk
+string := ''.
+1 to: 10000 do: [:i | string := string , i printString]. "Inefficient"
+```
 
 **Key Takeaways:**
 
-* **Efficiency:** The `WriteStream` approach avoids repeated string object creation.  Each `+` operation in the bad code creates a new string object, leading to significant overhead, especially with many iterations. The `WriteStream` builds the string in place.
-* **Memory Management:** The bad code's repeated string creation consumes more memory and increases garbage collection cycles, impacting performance.
-* **Readability:** While both examples are reasonably readable, the `WriteStream` approach becomes clearer with larger concatenation tasks.  It directly expresses the intent of building a string incrementally.
-* **Scalability:** The `WriteStream` method scales much better to large numbers of concatenations.  The time complexity of the bad code grows quadratically with the number of strings, whereas the `WriteStream` method is closer to linear.
-* **Conciseness:** Once you're familiar with `WriteStream`, this method is generally considered more concise and expressive for many concatenations than repeated use of `+`.
+* **Efficiency:** The `WriteStream` approach in the good code has linear time complexity (O(n)), while repeatedly using the `+` operator leads to quadratic time complexity (O(n^2)) because each concatenation creates a new string object.  For large numbers of concatenations, this difference is dramatic.
+* **Memory Management:** Repeated use of `+` leads to significantly higher memory consumption due to the creation and garbage collection of many intermediate string objects. `WriteStream` buffers the output, minimizing memory allocations.
+* **Readability:** While seemingly simpler at first glance, the `WriteStream` method is arguably more readable for larger concatenation tasks, clearly separating the process of string building from the final string retrieval.
+* **Avoidance of String Copies:** Each `+` operation creates a new string, copying the contents of the existing string.  `WriteStream` appends to an internal buffer, reducing copying overhead substantially.
 
 
-**Note:**  The `printString` method is used in both examples to convert the integer `i` into its string representation. This is a Smalltalk idiom.  Other approaches might exist depending on the specific Smalltalk dialect used.
+**Note:** The `printString` method is used here to convert the numbers to strings before concatenation.  In some Smalltalk dialects more concise methods might be available.  The fundamental principle remains the same:  avoid repeated string concatenation with the `+` operator for large numbers of strings.
