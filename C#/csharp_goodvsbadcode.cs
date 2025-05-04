@@ -1,41 +1,57 @@
-// Good Code: Uses generics for type safety and efficiency.  Handles potential exceptions.
-public static class GoodCodeExample
-{
-    public static T FindMax<T>(IEnumerable<T> collection) where T : IComparable<T>
-    {
-        if (collection == null || !collection.Any())
-        {
-            throw new ArgumentException("Collection cannot be null or empty.");
-        }
+// Good Code Example: Using Async/Await and proper exception handling for a web request
 
-        T max = collection.First();
-        foreach (T item in collection)
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+public class GoodCodeExample
+{
+    public static async Task Main(string[] args)
+    {
+        using (var httpClient = new HttpClient())
         {
-            if (item.CompareTo(max) > 0)
+            try
             {
-                max = item;
+                var response = await httpClient.GetAsync("https://www.example.com");
+                response.EnsureSuccessStatusCode(); // Throw an exception for bad status codes
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(content);
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTP Request Error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
             }
         }
-        return max;
     }
 }
 
 
-// Bad Code: Lacks type safety, error handling, and efficiency.  Uses unnecessary boxing/unboxing.
-public static class BadCodeExample
-{
-    public static object FindMax(object[] array)
-    {
-        if (array == null || array.Length == 0) return null; //Poor error handling
+// Bad Code Example: Ignoring exceptions and using synchronous web requests
 
-        object max = array[0];
-        foreach (object item in array)
+using System;
+using System.Net;
+
+public class BadCodeExample
+{
+    public static void Main(string[] args)
+    {
+        try
         {
-            if (((IComparable)item).CompareTo(max) > 0)
+            var request = WebRequest.Create("https://www.example.com");
+            using (var response = request.GetResponse())
+            using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
             {
-                max = item;
+                string content = reader.ReadToEnd();
+                Console.WriteLine(content);
             }
         }
-        return max;
+        catch (Exception) {  //Ignoring exceptions is bad practice
+            //Do nothing - this is bad practice
+        }
+
     }
 }
