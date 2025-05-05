@@ -1,69 +1,57 @@
-// Good Code: Using generics for type safety and flexibility
-public class GoodCodeExample<T> where T : IComparable<T>
+// Good Code: Using a dedicated class for data and leveraging LINQ for efficient querying.
+
+public class Product
 {
-    public T FindMax(T[] array)
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+
+public class GoodCodeExample
+{
+    public static void Main(string[] args)
     {
-        if (array == null || array.Length == 0)
+        List<Product> products = new List<Product>()
         {
-            throw new ArgumentException("Array cannot be null or empty.");
-        }
-        T max = array[0];
-        for (int i = 1; i < array.Length; i++)
+            new Product { Id = 1, Name = "Product A", Price = 10.99m },
+            new Product { Id = 2, Name = "Product B", Price = 25.50m },
+            new Product { Id = 3, Name = "Product C", Price = 5.75m }
+        };
+
+        var expensiveProducts = products.Where(p => p.Price > 10).Select(p => p.Name);
+
+        foreach (var productName in expensiveProducts)
         {
-            if (array[i].CompareTo(max) > 0)
-            {
-                max = array[i];
-            }
+            Console.WriteLine(productName);
         }
-        return max;
+
+        //More advanced features can be added here, like using async/await for I/O bound operations, or error handling.
     }
 }
 
 
-// Bad Code: Lack of error handling and inefficient approach
+// Bad Code: Mixing data and logic, using inefficient loops, and lacking error handling.
+
 public class BadCodeExample
 {
-    public int FindMax(int[] array)
+    public static void Main(string[] args)
     {
-        int max = array[0]; //Potential IndexOutOfRangeException
-        for (int i = 1; i < array.Length; i++)
+        string[] productNames = { "Product A", "Product B", "Product C" };
+        decimal[] productPrices = { 10.99m, 25.50m, 5.75m };
+
+        List<string> expensiveProducts = new List<string>();
+        for (int i = 0; i < productNames.Length; i++)
         {
-            if (array[i] > max)
+            if (productPrices[i] > 10)
             {
-                max = array[i];
+                expensiveProducts.Add(productNames[i]);
             }
         }
-        return max;
-    }
-}
 
-//Demonstrates usage with error handling for GoodCodeExample
-public void GoodCodeDemo() {
-    GoodCodeExample<int> goodCode = new GoodCodeExample<int>();
-    try{
-        int[] numbers = { 1, 5, 2, 8, 3 };
-        int max = goodCode.FindMax(numbers);
-        Console.WriteLine($"Max: {max}"); //Output: Max 8
-
-        int[] emptyArray = {};
-        max = goodCode.FindMax(emptyArray); //Throws exception
-    } catch (ArgumentException ex){
-        Console.WriteLine($"Error: {ex.Message}"); //Output: Error: Array cannot be null or empty.
-    }
-}
-
-
-//Demonstrates usage and potential exception for BadCodeExample
-public void BadCodeDemo(){
-    BadCodeExample badCode = new BadCodeExample();
-    try{
-        int[] numbers = {1,5,2,8,3};
-        int max = badCode.FindMax(numbers);
-        Console.WriteLine($"Max: {max}"); //Output: Max 8
-
-        int[] emptyArray = {};
-        max = badCode.FindMax(emptyArray); //Throws exception
-    } catch (IndexOutOfRangeException ex){
-        Console.WriteLine($"Error: {ex.Message}"); //Output: Error: Index was outside the bounds of the array.
+        foreach (string productName in expensiveProducts)
+        {
+            Console.WriteLine(productName);
+        }
+        //Lack of error handling, inefficient code,  tight coupling.
     }
 }
