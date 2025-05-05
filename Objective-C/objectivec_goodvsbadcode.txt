@@ -1,72 +1,73 @@
-// Good Code: Using blocks for asynchronous operations and proper error handling
+// Good Code: Using Blocks for Asynchronous Operations
 
-@interface MyViewController : UIViewController
+#import <Foundation/Foundation.h>
 
-@property (nonatomic, strong) NSURLSessionDataTask *dataTask;
+@interface MyObject : NSObject
+
+- (void)performLongOperationWithCompletion:(void (^)(BOOL success))completion;
 
 @end
 
-@implementation MyViewController
+@implementation MyObject
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-
-    NSURL *url = [NSURL URLWithString:@"https://api.example.com/data"];
-    NSURLSession *session = [NSURLSession sharedSession];
-
-    self.dataTask = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+- (void)performLongOperationWithCompletion:(void (^)(BOOL success))completion {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // Simulate a long-running operation
+        sleep(2); 
+        BOOL success = arc4random_uniform(2) == 0; // Random success/failure
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (error) {
-                NSLog(@"Error: %@", error);
-                // Handle error appropriately, e.g., show an alert to the user
-                return;
-            }
-
-            if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-                if (httpResponse.statusCode == 200) {
-                    // Process the data
-                    NSError *jsonError;
-                    NSDictionary *jsonData = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
-                    if (jsonError) {
-                        NSLog(@"JSON Error: %@", jsonError);
-                        return;
-                    }
-                    //Further processing of jsonData
-                } else {
-                    NSLog(@"HTTP Error: %ld", (long)httpResponse.statusCode);
-                    // Handle HTTP error
-                }
-            }
+            completion(success);
         });
-    }];
-
-    [self.dataTask resume];
-}
-
-- (void)dealloc {
-    [self.dataTask cancel];
+    });
 }
 
 @end
 
-
-
-// Bad Code: Ignoring errors and using deprecated methods
-
-@interface MyBadViewController : UIViewController @end
-
-@implementation MyBadViewController
-
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    NSURL *url = [NSURL URLWithString:@"https://api.example.com/data"];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil]; // Deprecated and ignores errors
-
-    if (data) {
-        //Process Data without error handling
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        MyObject *obj = [[MyObject alloc] init];
+        [obj performLongOperationWithCompletion:^(BOOL success) {
+            if (success) {
+                NSLog(@"Operation succeeded!");
+            } else {
+                NSLog(@"Operation failed!");
+            }
+        }];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:3]]; // Keep the app running to see results
     }
+    return 0;
+}
+
+
+// Bad Code: Improper Error Handling and Memory Management
+
+#import <Foundation/Foundation.h>
+
+@interface MyObject : NSObject
+
+- (void)performOperation;
+
+@end
+
+@implementation MyObject
+
+- (void)performOperation {
+    // No error handling
+    // Potential memory leaks if file operations fail
+    FILE *file = fopen("/path/to/file", "r"); 
+    if (file) {
+        // ... process the file ...
+        fclose(file); 
+    }
+
 }
 
 @end
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        MyObject *obj = [[MyObject alloc] init];
+        [obj performOperation];
+    }
+    return 0;
+}
