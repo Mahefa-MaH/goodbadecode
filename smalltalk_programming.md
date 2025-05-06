@@ -1,32 +1,38 @@
 **Title:** Efficient String Concatenation in Smalltalk
 
-**Summary:**  Smalltalk's `String` concatenation using `+` can be inefficient for many concatenations.  Using `StringBuffer` (or its modern equivalent, `StringBuilder` in some dialects) offers significant performance improvements for building strings iteratively.
+**Summary:**  Smalltalk's `String` class offers optimized concatenation methods avoiding the performance pitfalls of repeated string appends.  The `Stream` class provides an even more efficient approach for building strings from multiple components.
 
-**Good Code (Pharo Smalltalk):**
+
+**Good Code (using Stream):**
 
 ```smalltalk
 stringBuilder := WriteStream on: String new.
-1 to: 10000 do: [:i | stringBuilder nextPutAll: i printString; nextPut: $.].
-result := stringBuilder contents. 
-"result now holds a string containing '1.2.3...10000.'"
-
+1 to: 10000 do: [:i | stringBuilder nextPutAll: i printString; nextPut: $,.].
+stringBuilder cr.  "Add a newline"
+finalString := stringBuilder contents.
 ```
 
-**Bad Code (Pharo Smalltalk):**
+**Good Code (using `String`'s optimized concatenation):**
 
 ```smalltalk
-result := ''.
-1 to: 10000 do: [:i | result := result , i printString , '.'].
+finalString := (1 to: 10000) collect: [:i | i printString] join: ','.
+```
+
+
+**Bad Code (inefficient repeated appends):**
+
+```smalltalk
+resultString := ''.
+1 to: 10000 do: [:i | resultString := resultString , i printString , ','].
+resultString := resultString copyFrom: 1 to: resultString size - 1. "Remove trailing comma"
 ```
 
 
 **Key Takeaways:**
 
-* **Efficiency:** The `WriteStream` approach in the good code appends to a single mutable buffer. The bad code creates numerous intermediate strings, requiring repeated copying and garbage collection – resulting in O(n^2) time complexity.
-* **Memory Management:**  The good code reduces memory usage by avoiding the creation of many temporary string objects.  The bad code leads to excessive allocation and deallocation of string objects, impacting performance and memory consumption.
-* **Readability:** While concise, the bad code's repeated concatenation obscures the intent. The good code uses a `WriteStream`, improving the clarity and making the purpose more explicit.
-* **Scalability:** The good code's linear time complexity scales much better with large numbers of concatenations compared to the bad code's quadratic time complexity.
+* **Avoid Repeated Appends:** The bad code repeatedly creates new strings, leading to significant memory allocation and copying overhead, especially with large iterations.
+* **Utilize Streams:**  `WriteStream` is designed for efficient, incremental string construction, minimizing object creation and improving performance.  This is generally preferred for large-scale string building.
+* **Leverage Optimized Methods:** Smalltalk's built-in `join:` method on collections is highly optimized for concatenating strings.  The good example shows its efficient use.
+* **Memory Management:** The `copyfrom:` in the bad example highlights a manual approach to correcting a problem caused by the inefficient approach. Modern Smalltalk implementations have excellent garbage collectors, but inefficient coding leads to increased garbage collection cycles and reduced overall performance.
+* **Readability:**  The good code examples are more concise and easier to understand, leading to improved maintainability.
 
-
-
-**Note:**  While the examples are in Pharo Smalltalk, the concepts translate to other Smalltalk dialects.  The specific class names for mutable string buffers might vary slightly (e.g., `StringBuffer`, `StringBuilder`).  The core idea of using a stream-like object for efficient string building remains consistent.
