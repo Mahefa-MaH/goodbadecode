@@ -1,65 +1,49 @@
 program good_code
   implicit none
-  integer, allocatable :: arr(:)
-  integer :: n, i, sum, err
-  
+  integer, allocatable :: array(:)
+  integer :: i, n, sum
+
   ! Get array size from user.  Error handling included.
   print *, "Enter the size of the array:"
-  read(*,*,iostat=err) n
-  if (err /= 0) then
-    print *, "Invalid input. Exiting."
+  read *, n
+  if (n <= 0) then
+    print *, "Error: Array size must be positive."
     stop
   end if
 
   ! Allocate array dynamically.
-  allocate(arr(n), stat=err)
-  if (err /= 0) then
-    print *, "Memory allocation failed. Exiting."
+  allocate(array(1:n), stat=i)
+  if (i /= 0) then
+    print *, "Error allocating memory."
     stop
   end if
 
-  ! Populate array.  Handles potential errors during input.
+  ! Populate and sum the array.
   print *, "Enter the array elements:"
-  do i = 1, n
-    read(*,*,iostat=err) arr(i)
-    if (err /= 0) then
-      print *, "Invalid input. Exiting."
-      deallocate(arr)
-      stop
-    end if
-  end do
+  read *, (array(i), i=1, n)
+  sum = sum(array)
 
-  ! Calculate sum.
-  sum = 0
-  do i = 1, n
-    sum = sum + arr(i)
-  end do
+  ! Print the sum.
+  print *, "The sum of the array elements is:", sum
 
-  ! Print sum and deallocate array.
-  print *, "Sum of array elements:", sum
-  deallocate(arr)
+  ! Deallocate the array to prevent memory leaks.
+  deallocate(array)
 
 end program good_code
 
 
 program bad_code
   implicit none
-  integer :: arr(100), n, i, sum
+  integer :: array(100), i, sum
 
-  print *, "Enter the size of the array:"
-  read(*,*) n
-
-  !No check for n exceeding array bounds!
-  print *, "Enter the array elements:"
-  do i = 1, n
-    read(*,*) arr(i)
-  end do
-
+  ! No error handling for array bounds or input.
+  print *, "Enter 100 array elements:"
+  read *, (array(i), i=1, 100)
   sum = 0
-  do i = 1, n
-    sum = sum + arr(i)
+  do i = 1, 100
+    sum = sum + array(i)
   end do
 
-  print *, "Sum of array elements:", sum
+  print *, "The sum is:", sum
 
 end program bad_code
