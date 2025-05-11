@@ -1,41 +1,49 @@
-// Good Code: Using pattern matching for concise and efficient type handling
-sealed trait Result[A]
-case class Success[A](value: A) extends Result[A]
-case class Failure(error: String) extends Result[Nothing]
+// Good Code: Using pattern matching for robust error handling and concise code.
+def processData(data: Option[String]): Either[String, Int] = data match {
+  case Some(s) => 
+    try {
+      Right(s.toInt)
+    } catch {
+      case e: NumberFormatException => Left(s"Invalid input: $s")
+    }
+  case None => Left("No data provided")
+}
 
-def processData(data: String): Result[Int] = {
-  try {
-    val num = data.toInt
-    Success(num * 2)
-  } catch {
-    case e: NumberFormatException => Failure(s"Invalid input: $e")
+
+// Bad Code:  Repetitive error handling and less readable.
+def processDataBad(data: Option[String]): Int = {
+  if (data.isEmpty) {
+    throw new IllegalArgumentException("No data provided")
+  } else {
+    try {
+      data.get.toInt
+    } catch {
+      case e: NumberFormatException => {
+        println("Invalid input")
+        0 // or some arbitrary default value, which is error prone
+      }
+    }
   }
 }
 
-val result = processData("123")
-result match {
-  case Success(value) => println(s"Processed successfully: $value")
-  case Failure(error) => println(s"Processing failed: $error")
-}
 
+// Advanced use case showcasing monad transformers for complex error handling and optionality.
+import cats.data.{EitherT, OptionT}
+import cats.instances.either._
+import cats.instances.option._
+import cats.syntax.applicative._
+import cats.syntax.either._
+import cats.syntax.functor._
 
-//Bad Code:  Unnecessary complexity and verbose error handling
-def processDataBad(data:String):Int={
-  var num:Int = 0
-  try{
-      num = Integer.parseInt(data)
-      num * 2
-  }catch{
-      case e:NumberFormatException => {
-          println("Invalid input, Returning default value 0")
-          0
+def complexProcess(data: Option[String]): EitherT[Option, String, Int] = {
+  OptionT(data).semiflatMap(s => 
+    EitherT.fromEither[Option](
+      try {
+        s.toInt.asRight[String]
+      } catch {
+        case e: NumberFormatException => s"Invalid input: $s".asLeft[Int]
       }
-      case ex:Exception => {
-          println("An unexpected error occured")
-          0
-      }
-  }
+    )
+  )
 }
-val resultBad = processDataBad("abc")
-println(resultBad)
 
