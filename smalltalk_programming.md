@@ -1,47 +1,34 @@
-**Title:**  Smalltalk: Efficient vs. Inefficient Message Passing
+**Title:** Efficient String Concatenation in Smalltalk
 
-**Summary:**  Efficient Smalltalk leverages optimized message sends and avoids unnecessary object creation, while inefficient code suffers from redundant computations and excessive object instantiation, impacting performance.
+**Summary:**  Smalltalk's `String` concatenation can be optimized using `String stream` for better performance, especially with numerous concatenations, avoiding repeated object creation inherent in the `+` operator.
+
 
 **Good Code:**
 
 ```smalltalk
-Transcript show: 'Starting Calculation'.
-n := 10000.
-sum := 0.
-
-1 to: n do: [:i | 
-  sum := sum + i.
-].
-
-Transcript show: 'Sum: ', sum printString; cr.
-Transcript show: 'Calculation Complete'.
+stringStream := WriteStream on: String new.
+1 to: 1000 do: [:i | stringStream nextPutAll: i printString; nextPut: $ ].
+result := stringStream contents. 
+"result now contains '1234567891011...' "
 ```
-
-This example directly calculates the sum within a single loop.  It minimizes object creation and utilizes Smalltalk's efficient message-sending mechanism.  The `printString` message is only sent once at the end for efficient output.
-
 
 **Bad Code:**
 
 ```smalltalk
-Transcript show: 'Starting Calculation'.
-n := 10000.
-sum := 0.
+result := ''.
+1 to: 1000 do: [:i | result := result , i printString].
+"result now contains '1234567891011...' "
 
-1 to: n do: [:i | 
-  sum := sum + (Number with: i).  "Inefficient object creation"
-].
-
-Transcript show: 'Sum: ', (sum printString) , '!' ; cr.   "Redundant object creation"
-Transcript show: 'Calculation Complete'.
 ```
-
-This code inefficiently creates a new `Number` object for every iteration within the loop, increasing memory allocation and garbage collection overhead. Additionally, it creates an unnecessary string object by sending `printString` within the `Transcript show:` message.
-
 
 **Key Takeaways:**
 
-* **Minimize Object Creation:** Avoid unnecessary object instantiation within loops or frequently called methods.  Directly operate on existing objects when possible.
-* **Efficient Message Passing:**  Understand the cost of message sends. Sending messages to already created and cached objects is faster.
-* **Avoid Redundant Operations:** Combine operations to minimize the number of messages sent.  This reduces computational overhead.
-* **String Concatenation:**  Concatenate strings efficiently.  Using `printString` only once is generally more efficient than multiple concatenations.
-* **Understand your Framework:**  Smalltalk frameworks offer optimizations, use them.  This example demonstrates direct use of the `Transcript` for output, utilizing framework efficiency.
+* **Efficiency:** The `WriteStream` approach in the good code avoids repeated string object creation and copying. The `+` operator (or `,`) in the bad code creates a new string object in each iteration, leading to significant performance overhead, especially for large numbers of concatenations.  This is because Smalltalk strings are immutable.
+
+* **Memory Management:** The bad code generates many short-lived intermediate string objects, increasing garbage collection pressure.  The `WriteStream` method is more memory efficient.
+
+* **Readability:** While both examples achieve the same end result, the `WriteStream` approach, while slightly more verbose, is arguably more readable for experienced Smalltalk programmers, explicitly showing the intention of building a string incrementally.
+
+* **Scalability:** The good code scales much better to larger numbers of concatenations, maintaining reasonable performance, whereas the bad code's performance degrades quadratically with the number of concatenations.
+
+
