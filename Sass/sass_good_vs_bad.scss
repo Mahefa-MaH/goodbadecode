@@ -1,55 +1,50 @@
 // Good Sass: Using mixins and functions for reusability and maintainability
 
-@mixin button-style($background-color, $text-color) {
-  background-color: $background-color;
-  color: $text-color;
-  padding: 10px 20px;
+@mixin button-style($color, $size: 1em) {
+  background-color: $color;
+  padding: 0.5em $size;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.25em;
   cursor: pointer;
 }
 
-@function rem($px) {
-  @return $px / 16px + rem;
-}
-
-.button-primary {
-  @include button-style(blue, white);
-}
-
-.button-secondary {
-  @include button-style(gray, black);
-  font-size: rem(18px);
+@function calculate-shadow($x, $y, $blur, $color) {
+  @return unquote("0 #{$x}px #{$y}px #{$blur}px #{$color}");
 }
 
 
-// Bad Sass: Repeating code and lacking organization
+.good-button {
+  @include button-style(blue, 1.5em);
+}
 
-.button-primary {
-  background-color: blue;
-  color: white;
-  padding: 10px 20px;
+.good-button-alt {
+  @include button-style(green);
+}
+
+.shadow-example {
+  box-shadow: calculate-shadow(2, 2, 5, rgba(0,0,0,0.5));
+}
+
+
+// Bad Sass: Repetitive code and lack of organization
+
+.bad-button {
+  background-color: red;
+  padding: 0.5em 1em;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.25em;
   cursor: pointer;
 }
 
-.button-secondary {
-  background-color: gray;
-  color: black;
-  padding: 10px 20px;
+.bad-button-alt {
+  background-color: yellow;
+  padding: 0.5em 1.5em;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.25em;
   cursor: pointer;
-  font-size: 1.125rem; //Hardcoded instead of using a function for rem conversion.
 }
 
-.button-tertiary {
-  background-color: green;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+.bad-shadow {
+  box-shadow: 0 2px 2px 5px rgba(0,0,0,0.5);
 }
 
