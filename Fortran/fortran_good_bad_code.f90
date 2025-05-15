@@ -1,49 +1,53 @@
 program good_code
   implicit none
-  integer, allocatable :: array(:)
-  integer :: i, n, sum
-
-  ! Get array size from user.  Error handling included.
+  integer, allocatable :: arr(:)
+  integer :: n, i, sum
+  
+  ! Get input
   print *, "Enter the size of the array:"
   read *, n
-  if (n <= 0) then
-    print *, "Error: Array size must be positive."
-    stop
-  end if
-
-  ! Allocate array dynamically.
-  allocate(array(1:n), stat=i)
-  if (i /= 0) then
-    print *, "Error allocating memory."
-    stop
-  end if
-
-  ! Populate and sum the array.
+  
+  ! Allocate memory
+  allocate(arr(n))
+  
+  ! Input array elements
   print *, "Enter the array elements:"
-  read *, (array(i), i=1, n)
-  sum = sum(array)
+  read *, (arr(i), i=1,n)
+  
+  ! Calculate sum using a loop for better readability and maintainability.
+  sum = 0
+  do i = 1, n
+    sum = sum + arr(i)
+  end do
 
-  ! Print the sum.
-  print *, "The sum of the array elements is:", sum
+  ! Deallocate memory
+  deallocate(arr)
 
-  ! Deallocate the array to prevent memory leaks.
-  deallocate(array)
+  ! Output the sum
+  print *, "Sum of array elements:", sum
 
 end program good_code
 
 
 program bad_code
   implicit none
-  integer :: array(100), i, sum
+  integer :: arr(100), n, i, sum
+  
+  print *, "Enter array size (max 100):"
+  read *, n
 
-  ! No error handling for array bounds or input.
-  print *, "Enter 100 array elements:"
-  read *, (array(i), i=1, 100)
+  print *, "Enter array elements:"
+  read *, (arr(i), i=1,n)
+
   sum = 0
-  do i = 1, 100
-    sum = sum + array(i)
-  end do
-
-  print *, "The sum is:", sum
+  i = 1
+  sum = sum + arr(i)
+  i = 2
+  sum = sum + arr(i)
+  i = 3
+  sum = sum + arr(i)
+  ! ... and so on, this is highly inefficient and unmaintainable.  
+  
+  print *, "Sum:", sum
 
 end program bad_code
