@@ -1,58 +1,62 @@
-// Good Code: Using a case class for immutability and pattern matching for concise logic.
-case class Person(name: String, age: Int)
+// Good Code: Using pattern matching for concise and efficient handling of different cases.
+object GoodCode extends App {
+  sealed trait Result
+  case class Success(value: Int) extends Result
+  case class Failure(reason: String) extends Result
 
-object GoodCodeExample extends App {
-  val people = List(Person("Alice", 30), Person("Bob", 25), Person("Charlie", 35))
-
-  val adults = people.filter(_.age >= 18)
-
-  adults match {
-    case Nil => println("No adults found.")
-    case head :: tail => println(s"Adults found: ${adults.map(_.name).mkString(", ")}")
+  def processResult(result: Result): String = result match {
+    case Success(value) => s"Success: $value"
+    case Failure(reason) => s"Failure: $reason"
   }
 
-
-  // Functional approach for calculating average age.
-  val averageAge = people.map(_.age).sum.toDouble / people.size
-  println(s"Average age: $averageAge")
-
-
-  //Using for-comprehension for cleaner code.
-  for{
-    person <- people
-    if person.age > 30
-  } yield println(s"${person.name} is older than 30")
+  println(processResult(Success(10))) // Output: Success: 10
+  println(processResult(Failure("Error"))) // Output: Failure: Error)
 }
 
 
-// Bad Code: Mutable variables, nested loops, and unclear logic.
-object BadCodeExample extends App {
-  var people = Array(Array("Alice", "30"), Array("Bob", "25"), Array("Charlie", "35"))
-  var adults = new Array[Array[String]](people.length)
-  var i = 0
-  while (i < people.length) {
-    if (people(i)(1).toInt >= 18) {
-      adults(i) = people(i)
+// Bad Code:  Using if-else if chain which is less readable and maintainable for multiple cases.
+object BadCode extends App {
+  sealed trait Result
+  case class Success(value: Int) extends Result
+  case class Failure(reason: String) extends Result
+
+  def processResult(result: Result): String = {
+    if (result.isInstanceOf[Success]) {
+      val success = result.asInstanceOf[Success]
+      s"Success: ${success.value}"
+    } else if (result.isInstanceOf[Failure]) {
+      val failure = result.asInstanceOf[Failure]
+      s"Failure: ${failure.reason}"
+    } else {
+      "Unknown Result"
     }
-    i += 1
   }
 
-  println("Adults:")
-  var j = 0
-  while (j < adults.length) {
-    if (adults(j) != null) {
-      println(adults(j)(0))
-    }
-    j += 1
-  }
-
-  var sum = 0
-  var count = 0
-  var k = 0
-  while (k < people.length) {
-    sum += people(k)(1).toInt
-    count += 1
-    k += 1
-  }
-  println(s"Average age: ${sum.toDouble / count}")
+  println(processResult(Success(10))) // Output: Success: 10
+  println(processResult(Failure("Error"))) // Output: Failure: Error
 }
+
+//Advanced Use Case:  Using implicits and type classes for flexible error handling and logging.
+
+object AdvancedGoodCode extends App {
+  trait Logger[T] {
+    def log(t: T): Unit
+  }
+
+  implicit object ConsoleLogger extends Logger[String] {
+    override def log(message: String): Unit = println(message)
+  }
+
+  sealed trait Result[T]
+  case class Success[T](value: T) extends Result[T]
+  case class Failure[T](reason: String) extends Result[T]
+
+  def processResult[T](result: Result[T])(implicit logger: Logger[String]): Unit = result match {
+    case Success(value) => logger.log(s"Success: $value")
+    case Failure(reason) => logger.log(s"Failure: $reason")
+  }
+
+  processResult(Success(10))
+  processResult(Failure("Something went wrong"))
+}
+
