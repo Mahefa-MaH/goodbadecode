@@ -1,6 +1,7 @@
-**Title:** Efficient String Manipulation in Zig vs. C
+**Title:** Zig vs. C: Memory Management Strategies
 
-**Summary:**  Zig's built-in string type offers memory safety and compile-time guarantees absent in C's char arrays, leading to more robust and easier-to-maintain string handling.  Zig's allocator management simplifies memory control compared to C's manual memory allocation.
+**Summary:**  Zig's built-in memory management features, including allocators and compile-time guarantees, contrast sharply with C's manual memory management, which requires careful attention to prevent memory leaks and dangling pointers.  This leads to significantly different coding styles and levels of safety.
+
 
 **Good Code (Zig):**
 
@@ -12,13 +13,15 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var name = try allocator.alloc(u8, 10);
-    defer allocator.free(name);
-    name[0..5] = "Hello";
+    var buf = try allocator.alloc(u8, 10);
+    defer allocator.free(buf);
 
-    const greeting = try std.fmt.allocPrint(allocator, "{}, world!", .{name[0..5]});
-    defer allocator.free(greeting);
-    std.debug.print("{s}\n", .{greeting});
+    for (0..10) |i| {
+        buf[i] = @intCast(u8, i);
+    }
+
+    std.debug.print("Buffer contents: ", .{});
+    std.debug.print("{any}\n", .{buf});
 }
 ```
 
@@ -27,22 +30,22 @@ pub fn main() !void {
 ```c
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 int main() {
-    char *name = (char *)malloc(10 * sizeof(char)); 
-    if (name == NULL) return 1; //Error Handling - minimal
+    unsigned char *buf = (unsigned char *) malloc(10); 
+    if (buf == NULL) return 1; //Error handling is minimal
 
-    strncpy(name, "Hello", 5); //No null termination check. Potential Buffer overflow
-    
-    char *greeting = (char *)malloc(20 * sizeof(char));
-    if (greeting == NULL) {free(name); return 1;} //Error Handling - improved (somewhat)
+    for (int i = 0; i < 10; i++) {
+        buf[i] = (unsigned char) i;
+    }
 
-    sprintf(greeting, "%s, world!", name); //Potential buffer overflow if name is longer than expected. No bounds checking
+    printf("Buffer contents: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", buf[i]);
+    }
+    printf("\n");
 
-    printf("%s\n", greeting);
-    free(name);
-    free(greeting);
+    // free(buf);  Forgot to free! Memory leak!
     return 0;
 }
 ```
@@ -50,11 +53,10 @@ int main() {
 
 **Key Takeaways:**
 
-* **Memory Safety:** Zig's `allocator.alloc` and automatic freeing via `defer` prevent memory leaks and dangling pointers, common issues in C's manual memory management.  The C code requires explicit `free` calls and has inadequate error handling.
-* **Compile-Time Safety:** Zig's type system catches errors related to string lengths and bounds at compile time.  The C code relies on runtime checks (that are incomplete), making it vulnerable to buffer overflows.
-* **Ease of Use:** Zig's concise syntax and built-in string handling make string manipulation simpler and less error-prone than C's manual memory management and string functions.  The C code is less readable and requires more careful attention to memory and buffer management to prevent errors.
-* **Error Handling:** Zig's `try` simplifies error handling, while the C code lacks robust error checking for `malloc` failures and potential buffer overflows.  A better C solution would involve more extensive checks and likely use `snprintf`.
-* **Allocator Management:** Zig's `defer` statement automatically deallocates memory when the scope ends, while C requires manual `free` calls, which can be easily missed (causing leaks) or called prematurely (causing errors).
+* **Explicit Memory Management:** Zig's `defer` statement ensures `allocator.free(buf)` is always called, preventing memory leaks.  C requires the programmer to manually manage `free()` calls, which are easily forgotten (as shown in the bad code).
+* **Allocator Control:** Zig provides explicit control over memory allocation through allocators, enabling fine-grained management and potentially improved performance. C relies on the system's default allocator, offering less control.
+* **Compile-Time Safety:**  Zig's compiler can help detect memory errors at compile time in many cases (e.g. by enforcing correct use of `defer`). C's memory management is entirely runtime-checked (and only partially, if at all, if not using tools like Valgrind).
+* **Error Handling:** The Zig example shows more robust error handling (`try`) compared to C's minimal error checking in the `malloc` call.  Failing to check `malloc` can lead to runtime crashes.
+* **Code Clarity:** Zig's syntax makes the memory management intent clearer and easier to follow, reducing the likelihood of errors. The C code, while functional (if the `free` call was added), is less explicit about memory ownership and release.
 
 
-The Zig example demonstrates a safer, cleaner and more efficient way to handle strings compared to the C example's manual memory management and vulnerable string functions.  While both achieve the same functionality, the differences in safety and ease-of-use are significant.
