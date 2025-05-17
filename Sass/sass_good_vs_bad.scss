@@ -1,50 +1,56 @@
-// Good Sass: Using mixins and functions for reusability and maintainability
+// Good Sass: Using Mixins and Functions for Reusability and Maintainability
 
 @mixin button-style($color, $size: 1em) {
-  background-color: $color;
   padding: 0.5em $size;
+  background-color: $color;
   border: none;
-  border-radius: 0.25em;
   cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
-@function calculate-shadow($x, $y, $blur, $color) {
-  @return unquote("0 #{$x}px #{$y}px #{$blur}px #{$color}");
+@function rem($px) {
+  @return $px / 16px * 1rem;
 }
-
 
 .good-button {
-  @include button-style(blue, 1.5em);
+  @include button-style(blue, rem(20));
 }
 
-.good-button-alt {
-  @include button-style(green);
-}
-
-.shadow-example {
-  box-shadow: calculate-shadow(2, 2, 5, rgba(0,0,0,0.5));
+.good-button-2 {
+  @include button-style(green, rem(30));
 }
 
 
-// Bad Sass: Repetitive code and lack of organization
+// Bad Sass: Repetitive Code and Lack of Organization
 
 .bad-button {
-  background-color: red;
   padding: 0.5em 1em;
+  background-color: red;
   border: none;
-  border-radius: 0.25em;
   cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
-.bad-button-alt {
-  background-color: yellow;
+.bad-button-2 {
   padding: 0.5em 1.5em;
+  background-color: yellow;
   border: none;
-  border-radius: 0.25em;
   cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
-.bad-shadow {
-  box-shadow: 0 2px 2px 5px rgba(0,0,0,0.5);
+.bad-button-3 {
+  padding: 0.5em 2em;
+  background-color: purple;
+  border: none;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
 }
-
