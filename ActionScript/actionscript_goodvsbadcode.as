@@ -1,64 +1,57 @@
-// Good Code: Using a custom event for better decoupling and maintainability.
+// Good Code Example: Using Event Listeners and Custom Events for Modular Design
+
 package
 {
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+
 	public class GoodCodeExample extends MovieClip
 	{
 		public function GoodCodeExample()
 		{
-			addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleCustomEvent);
+			// Add event listener for a custom event
+			this.addEventListener("myCustomEvent", onMyCustomEvent);
+
+			// Dispatch the custom event when a button is clicked.
+			button.addEventListener(MouseEvent.CLICK, onClick);
 		}
 
-		private function handleCustomEvent(event:MyCustomEvent):void
+		private function onClick(event:MouseEvent):void
 		{
-			trace("Custom Event Received: " + event.data);
+			// Dispatch a custom event
+			dispatchEvent(new Event("myCustomEvent"));
+		}
+
+
+		private function onMyCustomEvent(event:Event):void
+		{
+			// Handle the custom event
+			trace("Custom event received!");
+			// Perform other actions based on the event
 		}
 	}
 }
 
-package
-{
-	public class MyCustomEvent extends Event
-	{
-		public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
-		public var data:String;
 
-		public function MyCustomEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
-		{
-			super(type, bubbles, cancelable);
-			this.data = data;
-		}
-	}
-}
+// Bad Code Example: Tight Coupling and Lack of Modularity
 
 
-// Bad Code: Tight coupling and poor error handling.
 package
 {
 	public class BadCodeExample extends MovieClip
 	{
 		public function BadCodeExample()
 		{
-			var myObject:MyObject = new MyObject();
-			try
-			{
-				trace(myObject.someMethod());
-			}
-			catch(error:Error)
-			{
-				// Poor error handling
-				trace("An error occurred!");
-			}
+			button.addEventListener(MouseEvent.CLICK, onButtonClick);
 		}
-	}
-}
 
-package
-{
-	public class MyObject
-	{
-		public function someMethod():String
+		private function onButtonClick(event:MouseEvent):void
 		{
-			return "Some value"; //Can throw error here.
+			// Directly manipulate other display objects 
+			// which leads to tight coupling and makes code difficult to maintain
+			otherObject.x = 200;
+			trace("Button clicked!");
+			// Perform other actions directly within the event handler.
 		}
 	}
 }
