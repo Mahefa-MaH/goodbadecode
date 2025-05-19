@@ -1,57 +1,46 @@
-// Good Code Example: Using Event Listeners and Custom Events for Modular Design
+// Good Code: Using event listeners and a custom event for better organization and maintainability.
 
 package
 {
 	import flash.events.Event;
-	import flash.events.MouseEvent;
+	import flash.display.Sprite;
 
-	public class GoodCodeExample extends MovieClip
+	public class GoodCodeExample extends Sprite
 	{
 		public function GoodCodeExample()
 		{
-			// Add event listener for a custom event
-			this.addEventListener("myCustomEvent", onMyCustomEvent);
+			// Custom event for better organization
+			addEventListener("myCustomEvent", myCustomEventHandler);
 
-			// Dispatch the custom event when a button is clicked.
-			button.addEventListener(MouseEvent.CLICK, onClick);
-		}
-
-		private function onClick(event:MouseEvent):void
-		{
-			// Dispatch a custom event
+			// Simulate some action that triggers the event
 			dispatchEvent(new Event("myCustomEvent"));
 		}
 
-
-		private function onMyCustomEvent(event:Event):void
+		private function myCustomEventHandler(event:Event):void
 		{
-			// Handle the custom event
-			trace("Custom event received!");
-			// Perform other actions based on the event
+			trace("Custom event handled successfully!");
 		}
 	}
 }
 
 
-// Bad Code Example: Tight Coupling and Lack of Modularity
-
+// Bad Code:  Directly manipulating timeline elements and lacking structure.  Difficult to maintain and debug.
 
 package
 {
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+
 	public class BadCodeExample extends MovieClip
 	{
 		public function BadCodeExample()
 		{
-			button.addEventListener(MouseEvent.CLICK, onButtonClick);
-		}
-
-		private function onButtonClick(event:MouseEvent):void
-		{
-			// Directly manipulate other display objects 
-			// which leads to tight coupling and makes code difficult to maintain
-			otherObject.x = 200;
-			trace("Button clicked!");
-			// Perform other actions directly within the event handler.
+			// Directly accessing timeline elements - fragile and hard to maintain
+			this.gotoAndStop(2);
+			this["myMC"].visible = false;
+			//Direct manipulation of properties  - difficult to track changes and potential conflicts
+			this.x = 100;
+			
 		}
 	}
 }
