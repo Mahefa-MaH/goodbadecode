@@ -1,46 +1,72 @@
-// Good Code: Using event listeners and a custom event for better organization and maintainability.
+// Good Code: Using event listeners and a custom event for better organization and decoupling.
 
 package
 {
-	import flash.events.Event;
 	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
 
 	public class GoodCodeExample extends Sprite
 	{
 		public function GoodCodeExample()
 		{
-			// Custom event for better organization
-			addEventListener("myCustomEvent", myCustomEventHandler);
+			// Create a button
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0xFF0000);
+			button.graphics.drawRect(0, 0, 100, 50);
+			button.graphics.endFill();
+			button.x = 50;
+			button.y = 50;
+			addChild(button);
 
-			// Simulate some action that triggers the event
-			dispatchEvent(new Event("myCustomEvent"));
+			// Add a mouse click event listener to the button
+			button.addEventListener(MouseEvent.CLICK, handleClick);
 		}
 
-		private function myCustomEventHandler(event:Event):void
+		// Handle the click event, dispatch a custom event
+		private function handleClick(event:MouseEvent):void
 		{
-			trace("Custom event handled successfully!");
+			var customEvent:Event = new Event("buttonClicked");
+			dispatchEvent(customEvent);
 		}
 	}
 }
 
-
-// Bad Code:  Directly manipulating timeline elements and lacking structure.  Difficult to maintain and debug.
+// Bad Code: Directly manipulating other objects, tightly coupled and hard to maintain.
 
 package
 {
-	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import flash.events.MouseEvent;
 
-	public class BadCodeExample extends MovieClip
+	public class BadCodeExample extends Sprite
 	{
+		private var otherObject:Sprite;
+
 		public function BadCodeExample()
 		{
-			// Directly accessing timeline elements - fragile and hard to maintain
-			this.gotoAndStop(2);
-			this["myMC"].visible = false;
-			//Direct manipulation of properties  - difficult to track changes and potential conflicts
-			this.x = 100;
+			// Create a button
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0x0000FF);
+			button.graphics.drawRect(0, 0, 100, 50);
+			button.graphics.endFill();
+			button.x = 150;
+			button.y = 50;
+			addChild(button);
 			
+			otherObject = new Sprite();
+			otherObject.graphics.beginFill(0x00FF00);
+			otherObject.graphics.drawRect(0,0,50,50);
+			otherObject.graphics.endFill();
+			otherObject.x = 200;
+			otherObject.y = 150;
+			addChild(otherObject);
+
+			// Directly manipulate other object on click
+			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
+				otherObject.x += 20;
+			});
 		}
 	}
 }
+
