@@ -1,4 +1,4 @@
-// Good Code: Using Blocks for Asynchronous Operations
+// Good Code: Using blocks for asynchronous operations and proper error handling
 
 #import <Foundation/Foundation.h>
 
@@ -12,17 +12,19 @@
 
 - (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate fetching data
-        sleep(2); 
-        NSData *data = [@"This is some fetched data" dataUsingEncoding:NSUTF8StringEncoding];
+        // Simulate fetching data (replace with actual network request)
+        sleep(2);  
+        NSData *data = [@"Sample Data" dataUsingEncoding:NSUTF8StringEncoding];
+        NSError *error = nil;
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(data, nil);
+            completion(data, error);
         });
     });
 }
 
 @end
+
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -35,34 +37,24 @@ int main(int argc, const char * argv[]) {
                 NSLog(@"Fetched data: %@", string);
             }
         }];
-        [[NSRunLoop currentRunLoop] run];
+        [[NSRunLoop currentRunLoop] run]; //Keep the main thread alive until the asynchronous operation is complete.
     }
     return 0;
 }
 
 
-// Bad Code:  Ignoring Error Handling and Blocking the Main Thread
+// Bad Code: Ignoring errors, improper memory management, and blocking the main thread
 
 #import <Foundation/Foundation.h>
 
-@interface MyBadDataFetcher : NSObject
-- (NSData*) fetchData;
-@end
-
-@implementation MyBadDataFetcher
-- (NSData*) fetchData{
-    sleep(2);
-    return [@"This is some fetched data" dataUsingEncoding:NSUTF8StringEncoding];
-}
-@end
-
-
-int main2(int argc, const char * argv[]) {
+int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        MyBadDataFetcher *badFetcher = [[MyBadDataFetcher alloc] init];
-        NSData *data = [badFetcher fetchData]; // Blocks main thread
-        NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSLog(@"Fetched data (bad): %@", string);
+        //Simulate a long running task that blocks the main thread.
+        sleep(5);
+        NSLog(@"This blocks the main thread!");
+        // Memory leak: no release of the string.
+        NSString* str = [NSString stringWithFormat:@"This is a string"];
+        NSLog(@"%@", str);
+        return 0;
     }
-    return 0;
 }
