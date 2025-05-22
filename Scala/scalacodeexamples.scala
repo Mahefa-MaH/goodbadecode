@@ -1,62 +1,59 @@
-// Good Code: Using pattern matching for concise and efficient handling of different cases.
-object GoodCode extends App {
-  sealed trait Result
-  case class Success(value: Int) extends Result
-  case class Failure(reason: String) extends Result
+// Good Code: Using immutable data structures and functional programming principles for efficient and predictable behavior.
 
-  def processResult(result: Result): String = result match {
-    case Success(value) => s"Success: $value"
-    case Failure(reason) => s"Failure: $reason"
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
+
+object GoodCodeExample extends App {
+
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
+
+  case class User(id: Int, name: String)
+
+  val users: Seq[User] = Seq(User(1, "Alice"), User(2, "Bob"), User(3, "Charlie"))
+
+  def findUserById(userId: Int): Future[Option[User]] = Future {
+    users.find(_.id == userId)
   }
 
-  println(processResult(Success(10))) // Output: Success: 10
-  println(processResult(Failure("Error"))) // Output: Failure: Error)
+
+  val futureUser: Future[Option[User]] = findUserById(2)
+
+  futureUser.onComplete {
+    case Success(user) => println(s"Found user: $user")
+    case Failure(exception) => println(s"Error: ${exception.getMessage}")
+  }
+
+  Thread.sleep(1000) // allow time for future to complete.  Not ideal, but for demo.
 }
 
 
-// Bad Code:  Using if-else if chain which is less readable and maintainable for multiple cases.
-object BadCode extends App {
-  sealed trait Result
-  case class Success(value: Int) extends Result
-  case class Failure(reason: String) extends Result
 
-  def processResult(result: Result): String = {
-    if (result.isInstanceOf[Success]) {
-      val success = result.asInstanceOf[Success]
-      s"Success: ${success.value}"
-    } else if (result.isInstanceOf[Failure]) {
-      val failure = result.asInstanceOf[Failure]
-      s"Failure: ${failure.reason}"
-    } else {
-      "Unknown Result"
+// Bad Code: Mutable state, side effects, and lack of error handling lead to unpredictable and hard-to-maintain code.
+
+
+object BadCodeExample extends App {
+
+  var users: Array[User] = Array(User(1,"Alice"), User(2,"Bob"), User(3, "Charlie"))
+
+  def findUserById(userId: Int): Option[User] = {
+    var foundUser: Option[User] = None
+    for(user <- users){
+      if(user.id == userId){
+        foundUser = Some(user)
+      }
     }
+    foundUser
   }
 
-  println(processResult(Success(10))) // Output: Success: 10
-  println(processResult(Failure("Error"))) // Output: Failure: Error
+
+  val user = findUserById(2)
+  println(user)
+
+
+  users(0) = User(1, "Updated Alice") // Mutable state, dangerous side effects
+
+  println(findUserById(1))
+
 }
 
-//Advanced Use Case:  Using implicits and type classes for flexible error handling and logging.
-
-object AdvancedGoodCode extends App {
-  trait Logger[T] {
-    def log(t: T): Unit
-  }
-
-  implicit object ConsoleLogger extends Logger[String] {
-    override def log(message: String): Unit = println(message)
-  }
-
-  sealed trait Result[T]
-  case class Success[T](value: T) extends Result[T]
-  case class Failure[T](reason: String) extends Result[T]
-
-  def processResult[T](result: Result[T])(implicit logger: Logger[String]): Unit = result match {
-    case Success(value) => logger.log(s"Success: $value")
-    case Failure(reason) => logger.log(s"Failure: $reason")
-  }
-
-  processResult(Success(10))
-  processResult(Failure("Something went wrong"))
-}
-
+case class User(id:Int, name:String)
