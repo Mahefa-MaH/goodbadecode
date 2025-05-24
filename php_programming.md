@@ -1,57 +1,83 @@
-**Title:** Efficient vs. Inefficient PHP Database Interaction
+**Title:** PHP: Secure File Upload Handling - Good vs. Bad
 
-**Summary:** The key difference lies in prepared statements' prevention of SQL injection vulnerabilities and improved performance compared to directly embedding user input into queries.  Prepared statements also offer better database optimization through query caching.
+**Summary:**  The key difference lies in secure handling of file uploads; good code validates file types, sizes, and names to prevent vulnerabilities, while bad code leaves the server open to attacks and unexpected file types.
 
-
-**Good Code (Prepared Statements):**
-
-```php
-<?php
-  $db = new PDO('mysql:host=localhost;dbname=mydatabase', 'username', 'password');
-  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-  $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
-  $username = $_GET['username']; //Example user input, sanitize in a real application!  
-  $stmt->execute([$username]);
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-  if ($user) {
-    echo "Welcome, " . $user['username'] . "!";
-  } else {
-    echo "User not found.";
-  }
-?>
-```
-
-**Bad Code (Vulnerable Query):**
+**Good Code:**
 
 ```php
 <?php
-  $db = new PDO('mysql:host=localhost;dbname=mydatabase', 'username', 'password');
-  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-  $username = $_GET['username']; //Highly vulnerable to SQL injection!
-  $query = "SELECT * FROM users WHERE username = '" . $username . "'";
-  $result = $db->query($query);
-  $user = $result->fetch(PDO::FETCH_ASSOC);
+// Allowed file types
+$allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-  if ($user) {
-    echo "Welcome, " . $user['username'] . "!";
-  } else {
-    echo "User not found.";
-  }
+// Max file size in bytes
+$maxSize = 5 * 1024 * 1024; // 5MB
+
+// Check if file was uploaded
+if (isset($_FILES['uploadedFile']) && $_FILES['uploadedFile']['error'] === UPLOAD_ERR_OK) {
+    $tempFile = $_FILES['uploadedFile']['tmp_name'];
+    $fileType = $_FILES['uploadedFile']['type'];
+    $fileSize = $_FILES['uploadedFile']['size'];
+    $fileName = $_FILES['uploadedFile']['name'];
+
+    // Validate file type
+    if (!in_array($fileType, $allowedTypes)) {
+        die("Invalid file type.");
+    }
+
+    // Validate file size
+    if ($fileSize > $maxSize) {
+        die("File too large.");
+    }
+
+    // Sanitize file name (prevent directory traversal)
+    $fileName = basename($fileName); //Removes any path information
+    $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName); //Removes unwanted characters
+
+    // Generate a unique file name to avoid overwriting
+    $uniqueFileName = uniqid() . "_" . $fileName;
+
+    // Define upload directory, make sure it's writable
+    $uploadDir = 'uploads/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true); // creates directory if it doesn't exist; adjust permissions as needed
+    }
+    $uploadPath = $uploadDir . $uniqueFileName;
+
+
+    // Move the uploaded file
+    if (move_uploaded_file($tempFile, $uploadPath)) {
+        echo "File uploaded successfully.";
+    } else {
+        die("Error uploading file.");
+    }
+} else {
+    echo "No file uploaded.";
+}
+
+
 ?>
-
 ```
+
+**Bad Code:**
+
+```php
+<?php
+    if(isset($_FILES["uploadedFile"])){
+        move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], $_FILES["uploadedFile"]["name"]);
+        echo "File uploaded successfully.";
+    }
+?>
+```
+
 
 **Key Takeaways:**
 
-* **Security:** The good code uses prepared statements, preventing SQL injection vulnerabilities.  The bad code directly concatenates user input into the SQL query, making it susceptible to attacks.
-* **Performance:** Prepared statements can be cached by the database, leading to faster execution times, especially for frequently used queries. The bad code re-parses the query every time it's executed.
-* **Readability and Maintainability:** Prepared statements make the code cleaner, easier to read, and easier to maintain. The bad code is more prone to errors and harder to debug.
-* **Best Practices:** Using prepared statements is a fundamental security and performance best practice in PHP database interactions.  It demonstrates a good understanding of database security principles.
-* **Sanitization is not a substitute:** Even with proper sanitization, prepared statements are recommended for robust security.  Sanitization alone does not guarantee complete protection against sophisticated attacks.
+* **Input Validation:** The good code rigorously checks the file type, size, and name, preventing malicious uploads. The bad code lacks any validation, making it vulnerable to various attacks.
+* **File Name Sanitization:**  The good code sanitizes the filename to prevent directory traversal attacks, where a malicious user tries to access files outside the intended upload directory.  The bad code directly uses the uploaded filename, leading to potential security breaches.
+* **Error Handling:** The good code provides informative error messages and handles potential errors (e.g., file size limits, invalid file types). The bad code lacks proper error handling.
+* **Unique File Names:** The good code uses `uniqid()` to generate a unique filename, avoiding overwriting existing files.  The bad code risks overwriting files with the same name.
+* **Directory Creation and Permissions:** The good code safely creates the upload directory if it doesn't exist and sets appropriate permissions, preventing potential permission-related errors. The bad code assumes the directory exists and is writable.
+* **Security:** The good code significantly reduces the risk of security vulnerabilities like file injection, directory traversal, and denial-of-service attacks.  The bad code is highly vulnerable to all of these.
 
-
-
-**Note:**  For production systems, always implement robust input validation and sanitization *in addition* to prepared statements. The example `$_GET['username']` is purely illustrative and should be replaced with properly sanitized user input in a real-world application.  Consider using parameterized functions or libraries for secure user input handling.
+Remember to adjust file permissions (`0755` in the example) according to your server's security policy.  Always prioritize secure coding practices when handling user-uploaded files.
