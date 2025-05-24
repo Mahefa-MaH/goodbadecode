@@ -1,6 +1,7 @@
-// Good Code Example: Using Async/Await and proper exception handling for a web request
+// Good Code: Uses asynchronous programming for I/O-bound operations, leverages built-in exception handling, and implements proper resource management.
 
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -8,31 +9,32 @@ public class GoodCodeExample
 {
     public static async Task Main(string[] args)
     {
-        using (var httpClient = new HttpClient())
+        try
         {
-            try
+            using (var httpClient = new HttpClient())
             {
                 var response = await httpClient.GetAsync("https://www.example.com");
-                response.EnsureSuccessStatusCode(); // Throw an exception for bad status codes
+                response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync();
                 Console.WriteLine(content);
             }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"HTTP Request Error: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
-            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP Request Error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
     }
 }
 
 
-// Bad Code Example: Ignoring exceptions and using synchronous web requests
+// Bad Code: Lacks error handling, uses synchronous I/O blocking the main thread, and doesn't manage resources properly.
 
 using System;
+using System.IO;
 using System.Net;
 
 public class BadCodeExample
@@ -43,15 +45,16 @@ public class BadCodeExample
         {
             var request = WebRequest.Create("https://www.example.com");
             using (var response = request.GetResponse())
-            using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
+            using (var stream = response.GetResponseStream())
+            using (var reader = new StreamReader(stream))
             {
-                string content = reader.ReadToEnd();
-                Console.WriteLine(content);
+                Console.WriteLine(reader.ReadToEnd());
             }
         }
-        catch (Exception) {  //Ignoring exceptions is bad practice
-            //Do nothing - this is bad practice
+        catch (Exception ex)
+        {
+            //This is a very poor error handling
+            Console.WriteLine("Error: " + ex.Message);
         }
-
     }
 }
