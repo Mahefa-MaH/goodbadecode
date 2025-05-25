@@ -1,59 +1,41 @@
-**Title:** PHP: Secure File Upload Handling - Good vs. Bad
+**Title:** Secure PHP User Input Handling: A Comparison
 
-**Summary:**  The key difference lies in secure handling of file uploads; good code validates file types, sizes, and names to prevent vulnerabilities, while bad code leaves the server open to attacks and unexpected file types.
+**Summary:**  The key difference lies in how user input is sanitized and validated. Good code uses parameterized queries and input filtering to prevent SQL injection and cross-site scripting (XSS), while bad code directly incorporates unsanitized user input into database queries, creating vulnerabilities.
 
 **Good Code:**
 
 ```php
 <?php
 
-// Allowed file types
-$allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+// Assuming a PDO database connection is already established: $pdo
 
-// Max file size in bytes
-$maxSize = 5 * 1024 * 1024; // 5MB
+function addUser($username, $email, $pdo) {
+  $stmt = $pdo->prepare("INSERT INTO users (username, email) VALUES (?, ?)");
+  $stmt->execute([$username, $email]); 
 
-// Check if file was uploaded
-if (isset($_FILES['uploadedFile']) && $_FILES['uploadedFile']['error'] === UPLOAD_ERR_OK) {
-    $tempFile = $_FILES['uploadedFile']['tmp_name'];
-    $fileType = $_FILES['uploadedFile']['type'];
-    $fileSize = $_FILES['uploadedFile']['size'];
-    $fileName = $_FILES['uploadedFile']['name'];
-
-    // Validate file type
-    if (!in_array($fileType, $allowedTypes)) {
-        die("Invalid file type.");
-    }
-
-    // Validate file size
-    if ($fileSize > $maxSize) {
-        die("File too large.");
-    }
-
-    // Sanitize file name (prevent directory traversal)
-    $fileName = basename($fileName); //Removes any path information
-    $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName); //Removes unwanted characters
-
-    // Generate a unique file name to avoid overwriting
-    $uniqueFileName = uniqid() . "_" . $fileName;
-
-    // Define upload directory, make sure it's writable
-    $uploadDir = 'uploads/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true); // creates directory if it doesn't exist; adjust permissions as needed
-    }
-    $uploadPath = $uploadDir . $uniqueFileName;
-
-
-    // Move the uploaded file
-    if (move_uploaded_file($tempFile, $uploadPath)) {
-        echo "File uploaded successfully.";
-    } else {
-        die("Error uploading file.");
-    }
-} else {
-    echo "No file uploaded.";
+  //Input validation should happen BEFORE this point.  See Key Takeaways.
+  //Error handling omitted for brevity, but crucial in production code.  
 }
+
+
+//Example of input sanitization and validation - crucial!
+function sanitizeInput($input){
+    //Basic example - needs improvement for production
+    $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8'); //prevents XSS
+    $input = trim($input); //removes whitespace
+    return $input;
+}
+
+// Example usage with validation:
+$username = sanitizeInput($_POST['username']);
+$email = sanitizeInput($_POST['email']);
+
+//Basic validation - add more robust checks
+if(empty($username) || empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)){
+    die("Invalid Input");
+}
+
+addUser($username, $email, $pdo);
 
 
 ?>
@@ -63,21 +45,23 @@ if (isset($_FILES['uploadedFile']) && $_FILES['uploadedFile']['error'] === UPLOA
 
 ```php
 <?php
-    if(isset($_FILES["uploadedFile"])){
-        move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], $_FILES["uploadedFile"]["name"]);
-        echo "File uploaded successfully.";
-    }
+
+// Assuming a mysql_connect database connection is already established - HIGHLY discouraged.
+$username = $_POST['username'];
+$email = $_POST['email'];
+
+$query = "INSERT INTO users (username, email) VALUES ('$username', '$email')";
+mysql_query($query); // Directly embedding user input - VULNERABLE!
+
 ?>
 ```
 
-
 **Key Takeaways:**
 
-* **Input Validation:** The good code rigorously checks the file type, size, and name, preventing malicious uploads. The bad code lacks any validation, making it vulnerable to various attacks.
-* **File Name Sanitization:**  The good code sanitizes the filename to prevent directory traversal attacks, where a malicious user tries to access files outside the intended upload directory.  The bad code directly uses the uploaded filename, leading to potential security breaches.
-* **Error Handling:** The good code provides informative error messages and handles potential errors (e.g., file size limits, invalid file types). The bad code lacks proper error handling.
-* **Unique File Names:** The good code uses `uniqid()` to generate a unique filename, avoiding overwriting existing files.  The bad code risks overwriting files with the same name.
-* **Directory Creation and Permissions:** The good code safely creates the upload directory if it doesn't exist and sets appropriate permissions, preventing potential permission-related errors. The bad code assumes the directory exists and is writable.
-* **Security:** The good code significantly reduces the risk of security vulnerabilities like file injection, directory traversal, and denial-of-service attacks.  The bad code is highly vulnerable to all of these.
+* **Prepared Statements (Parameterized Queries):** The good code uses PDO's `prepare()` and `execute()` methods. This prevents SQL injection by separating the SQL query structure from the data, treating user input as data, not code.  The bad code directly concatenates user input into the SQL query, making it vulnerable to SQL injection attacks.
+* **Input Sanitization & Validation:**  The good code demonstrates basic input sanitization using `htmlspecialchars()` to prevent XSS vulnerabilities and utilizes `filter_var()` for basic email validation.  Crucially, the code *validates* before using the input, checking if it's empty or improperly formatted.  The bad code entirely omits any input validation or sanitization, leaving it wide open to various attacks.
+* **Security Best Practices:** The good code uses PDO, a more secure and robust database abstraction layer compared to the outdated `mysql_*` functions used in the bad code.  PDO also offers better error handling capabilities.  The bad code showcases deprecated functionality and is therefore vulnerable.
+* **Error Handling:** While omitted for brevity, comprehensive error handling is vital in production systems.  The bad code lacks any error checking, potentially exposing sensitive information or causing unexpected behavior.  The good code (while not explicitly showing error handling) implies that proper error handling would be implemented.
+* **Database Abstraction Layer:** Using PDO or similar database abstraction layers (mysqli) is essential for secure and maintainable code.  Direct interaction with database functions (like `mysql_query`) is highly discouraged due to increased vulnerability and maintenance difficulties.
 
-Remember to adjust file permissions (`0755` in the example) according to your server's security policy.  Always prioritize secure coding practices when handling user-uploaded files.
+
