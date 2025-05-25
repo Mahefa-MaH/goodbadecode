@@ -1,7 +1,6 @@
-**Title:** Zig vs. C: Memory Management Strategies
+**Title:** Zig vs. C: Memory Management Strategies Compared
 
-**Summary:**  Zig employs a stricter, more explicit memory management model compared to C, relying heavily on ownership and error handling to prevent memory leaks and undefined behavior. C, in contrast, places the burden of memory management primarily on the programmer, requiring manual allocation and deallocation.
-
+**Summary:**  Zig's built-in memory management features, including allocators and error handling, offer improved safety and clarity compared to C's manual memory management, which is prone to errors like dangling pointers and memory leaks.  Zig's compile-time checks enforce stricter memory safety while C relies heavily on runtime checks and programmer discipline.
 
 **Good Code (Zig):**
 
@@ -13,12 +12,14 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var buffer = try allocator.alloc(u8, 1024); // Allocate memory on the heap
-    defer allocator.free(buffer); // Automatically free when out of scope
+    var buf = try allocator.alloc(u8, 10);
+    defer allocator.free(buf);
 
-    // ... use buffer ...
+    for (buf) |*b| {
+        b.* = 0;
+    }
 
-    std.debug.print("Memory allocated and freed safely!\n", .{});
+    std.debug.print("Memory allocated and zeroed successfully.\n", .{});
 }
 ```
 
@@ -29,21 +30,32 @@ pub fn main() !void {
 #include <stdlib.h>
 
 int main() {
-    char *buffer = (char *)malloc(1024); // Allocate memory
+    unsigned char *buf = (unsigned char *)malloc(10); 
+    if (buf == NULL) {
+        return 1; //Error handling is minimal.
+    }
 
-    // ... use buffer ...
+    for (int i = 0; i < 10; i++) {
+        buf[i] = 0;
+    }
 
-    // Missing free() call!  Memory leak!
+    printf("Memory allocated and zeroed successfully.\n");
+    // free(buf); Missing free call leads to memory leak!
     return 0;
 }
 ```
 
+
 **Key Takeaways:**
 
-* **Error Handling:** Zig's `try` keyword explicitly handles allocation errors, preventing crashes. C's `malloc` silently returns `NULL` on failure, requiring manual error checking.
-* **Automatic Memory Management:** Zig's `defer` statement guarantees `allocator.free(buffer)` is called even if errors occur within the `main` function, preventing memory leaks.  C requires explicit `free()` calls, which are often forgotten, leading to memory leaks.
-* **Explicit Ownership:** Zig's ownership system helps the compiler detect potential memory safety issues at compile time. C relies on the programmer to carefully manage memory manually, making it error-prone.
-* **Readability and Maintainability:** Zig's approach leads to cleaner, more maintainable code by reducing the cognitive load associated with manual memory management. C's manual approach can make code harder to understand and debug, particularly in larger projects.
-* **Safety:** Zig's built-in safety mechanisms significantly reduce the risk of common memory-related bugs (e.g., buffer overflows, dangling pointers, double frees) which are prevalent in C.
+* **Explicit Memory Management:** Zig's `allocator.alloc` and `allocator.free` paired with `defer` statements enforce deterministic memory deallocation, preventing memory leaks. C relies on programmer diligence to call `free`, making leaks a common occurrence.
+
+* **Error Handling:** Zig's `try` keyword cleanly handles allocation errors, preventing crashes. C's `malloc` returning `NULL` requires manual error checks, which are often overlooked or handled poorly.
+
+* **Safety:** Zig's compiler performs more extensive checks at compile time to catch errors related to memory management, reducing runtime surprises and improving code robustness. C's runtime checks are less comprehensive, leaving more opportunities for memory-related vulnerabilities.
+
+* **Readability:** Zig's `defer` keyword and structured approach to resource management enhances code readability and maintainability compared to C's more manual and error-prone approach.
+
+* **Allocator Awareness:** Zig encourages explicit allocator selection and management which allows for more fine-grained control over memory and potentially improved performance compared to C's implicit global allocator.
 
 
