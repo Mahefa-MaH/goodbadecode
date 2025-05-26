@@ -1,55 +1,56 @@
-// Good Code: Using a custom event for better decoupling and maintainability.
+// Good Code: Using a custom event for better code organization and maintainability.
 
-package 
+package
 {
-	import flash.events.Event;
-	import flash.events.EventDispatcher;
+    public class GoodCodeExample extends MovieClip
+    {
+        public function GoodCodeExample()
+        {
+            addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleMyCustomEvent);
+            dispatchEvent(new MyCustomEvent(MyCustomEvent.MY_CUSTOM_EVENT));
+        }
 
-	public class GoodCodeExample extends EventDispatcher
-	{
-		public function GoodCodeExample() 
-		{
-			// Listen for the custom event.
-			addEventListener("dataReady", onDataReady);
-		}
+        private function handleMyCustomEvent(event:MyCustomEvent):void
+        {
+            trace("Custom event received: ", event.data);
+        }
+    }
+}
 
-		public function loadData():void
-		{
-			// Simulate asynchronous data loading.
-			setTimeout(function():void{
-				dispatchEvent(new Event("dataReady"));
-			}, 1000);
-		}
+package
+{
+    public class MyCustomEvent extends Event
+    {
+        public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
+        public var data:String;
 
-		private function onDataReady(event:Event):void
-		{
-			trace("Data loading is complete.");
-                        //Further actions here.
-		}
-	}
+        public function MyCustomEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
+        {
+            super(type, bubbles, cancelable);
+            this.data = data;
+        }
+    }
 }
 
 
-// Bad Code: Tight coupling and lack of error handling.
+// Bad Code: Tight coupling and lack of event handling.  Difficult to maintain and extend.
+
 package 
 {
-	public class BadCodeExample
-	{
-		private var _data:String;
+    public class BadCodeExample extends MovieClip
+    {
+        private var _myVar:String = "Initial Value";
 
-		public function BadCodeExample() 
-		{
-			//Directly access and modify another class's data.
-			_data = SomeOtherClass.getData();
-                        // No error handling, if SomeOtherClass.getData() throws an error.
-			trace("Data: " + _data);
-		}
-	}
+        public function BadCodeExample()
+        {
+            someFunctionThatChangesMyVar();
+            trace("Value of _myVar: " + _myVar);
 
-        // Dummy class for BadCodeExample
-        public class SomeOtherClass{
-            public static function getData():String{
-                return "Some data";
-            }
         }
+
+        private function someFunctionThatChangesMyVar():void
+        {
+            _myVar = "Modified Value";
+        }
+    }
 }
