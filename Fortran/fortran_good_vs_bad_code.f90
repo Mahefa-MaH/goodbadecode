@@ -1,31 +1,33 @@
 program good_code
   implicit none
   integer, allocatable :: arr(:)
-  integer :: n, i, sum
+  integer :: n, i, sum = 0
 
-  ! Get the size of the array from the user.
-  print *, "Enter the size of the array:"
-  read *, n
+  ! Get input from user.  Robust error handling included.
+  print *, "Enter the number of elements:"
+  read(*,*,iostat=i) n
+  if (i /= 0) then
+    print *, "Invalid input. Exiting."
+    stop
+  end if
 
-  ! Allocate memory for the array.
-  allocate(arr(n))
+  allocate(arr(n),stat=i)
+  if (i /= 0) then
+    print *, "Memory allocation failed. Exiting."
+    stop
+  end if
 
-  ! Get the elements of the array from the user.
-  print *, "Enter the elements of the array:"
-  do i = 1, n
-    read *, arr(i)
-  enddo
+  print *, "Enter the elements:"
+  read(*,*) (arr(i), i=1,n)
 
-  ! Calculate the sum of the elements of the array.
-  sum = 0
+
+  !Efficient sum calculation using a do loop.
   do i = 1, n
     sum = sum + arr(i)
-  enddo
+  end do
 
-  ! Print the sum of the elements of the array.
-  print *, "The sum of the elements of the array is:", sum
+  print *, "Sum:", sum
 
-  ! Deallocate the array.
   deallocate(arr)
 
 end program good_code
@@ -33,25 +35,18 @@ end program good_code
 
 program bad_code
   implicit none
-  integer :: arr(100), n, i, sum
+  integer :: arr(100),n,i,sum
+  print *, "Enter the number of elements:"
+  read(*,*) n
 
-  ! Get the size of the array from the user.  No error handling for n > 100.
-  print *, "Enter the size of the array:"
-  read *, n
+  print *, "Enter the elements:"
+  read(*,*) (arr(i),i=1,n)
 
-  ! Get the elements of the array from the user. No bounds checking.
-  print *, "Enter the elements of the array:"
-  do i = 1, n
-    read *, arr(i)
-  enddo
-
-  ! Calculate the sum of the elements of the array.
   sum = 0
-  do i = 1, n
+  do i=1,n
     sum = sum + arr(i)
   enddo
 
-  ! Print the sum of the elements of the array.
-  print *, "The sum of the elements of the array is:", sum
+  print *, "Sum:",sum
 
 end program bad_code
