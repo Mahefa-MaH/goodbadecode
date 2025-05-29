@@ -1,55 +1,54 @@
 program good_code
   implicit none
-  integer, allocatable :: arr(:)
+  integer, allocatable :: array(:)
   integer :: n, i, sum
   
-  ! Get array size from user.  Error handling included.
+  ! Get the size of the array from the user.
   print *, "Enter the size of the array:"
   read *, n
-  if (n <= 0) then
-    print *, "Error: Array size must be positive."
-    stop
-  end if
-
-  ! Allocate array dynamically.
-  allocate(arr(n), stat=i)
+  
+  ! Allocate memory for the array.  Error handling included.
+  allocate(array(1:n), stat=i)
   if (i /= 0) then
-    print *, "Error: Memory allocation failed."
+    print *, "Memory allocation failed."
     stop
   end if
 
-  ! Populate array and calculate sum.
-  sum = 0
+  ! Fill the array with values.
   print *, "Enter the array elements:"
+  read *, (array(i), i=1,n)
+
+  ! Calculate the sum of the array elements.
+  sum = 0
   do i = 1, n
-    read *, arr(i)
-    sum = sum + arr(i)
+    sum = sum + array(i)
   end do
 
   ! Print the sum.
-  print *, "Sum of array elements:", sum
+  print *, "The sum of the array elements is:", sum
 
-  ! Deallocate array to prevent memory leaks.
-  deallocate(arr)
+  ! Deallocate the array.
+  deallocate(array)
 
 end program good_code
 
 
 program bad_code
   implicit none
-  integer :: arr(100), n, i, sum
+  integer :: array(100), n, i, sum
 
-  ! No input validation. Assumes array size will always be <= 100.
-  print *, "Enter the number of elements (max 100):"
+  print *, "Enter the size of the array:"
   read *, n
 
-  ! No error handling for read.
+  ! No error handling for array bounds.  Vulnerable to buffer overflow.
   print *, "Enter the array elements:"
-  do i = 1, n
-    read *, arr(i)
-    sum = sum + arr(i)
-  enddo
+  read *, (array(i), i=1,n)
 
-  print *, "Sum:", sum
+  sum = 0
+  do i = 1, n
+    sum = sum + array(i)
+  end do
+
+  print *, "The sum is:", sum
 
 end program bad_code
