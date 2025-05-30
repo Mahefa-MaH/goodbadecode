@@ -4,19 +4,22 @@
 
 @interface MyObject : NSObject
 
-- (void)performLongOperationWithCompletion:(void (^)(BOOL success))completion;
+- (void)performLongRunningTaskWithCompletion:(void (^)(BOOL success, NSError *error))completion;
 
 @end
 
 @implementation MyObject
 
-- (void)performLongOperationWithCompletion:(void (^)(BOOL success))completion {
+- (void)performLongRunningTaskWithCompletion:(void (^)(BOOL success, NSError *error))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate a long-running operation
+        // Simulate a long-running task
         sleep(2); 
+
         BOOL success = arc4random_uniform(2) == 0; // Random success/failure
+        NSError *error = success ? nil : [NSError errorWithDomain:@"MyDomain" code:1 userInfo:nil];
+
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(success);
+            completion(success, error);
         });
     });
 }
@@ -26,48 +29,43 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         MyObject *obj = [[MyObject alloc] init];
-        [obj performLongOperationWithCompletion:^(BOOL success) {
+        [obj performLongRunningTaskWithCompletion:^(BOOL success, NSError *error) {
             if (success) {
-                NSLog(@"Operation succeeded!");
+                NSLog(@"Task completed successfully!");
             } else {
-                NSLog(@"Operation failed!");
+                NSLog(@"Task failed: %@", error);
             }
         }];
-        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:3]]; // Keep the app running to see results
+        [[NSRunLoop currentRunLoop] run]; // Keep the program running to see the result
     }
     return 0;
 }
 
 
-// Bad Code: Improper Error Handling and Memory Management
+// Bad Code: Improper Error Handling and Synchronous Operation
 
 #import <Foundation/Foundation.h>
 
 @interface MyObject : NSObject
-
-- (void)performOperation;
-
+- (BOOL)performLongRunningTask;
 @end
 
 @implementation MyObject
-
-- (void)performOperation {
-    // No error handling
-    // Potential memory leaks if file operations fail
-    FILE *file = fopen("/path/to/file", "r"); 
-    if (file) {
-        // ... process the file ...
-        fclose(file); 
-    }
-
+- (BOOL)performLongRunningTask {
+    sleep(2); //Simulates long running task.  Blocking.
+    return arc4random_uniform(2) == 0;
 }
-
 @end
+
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        MyObject *obj = [[MyObject alloc] init];
-        [obj performOperation];
+      MyObject *obj = [[MyObject alloc] init];
+      if ([obj performLongRunningTask]) {
+          NSLog(@"Task completed successfully!");
+      } else {
+          NSLog(@"Task failed!"); //Minimal error handling
+      }
     }
     return 0;
 }
