@@ -1,60 +1,63 @@
-// Good Code: Uses asynchronous programming for I/O-bound operations, leverages built-in exception handling, and implements proper resource management.
-
+// Good Code: Using asynchronous programming for I/O-bound operations.
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 public class GoodCodeExample
 {
-    public static async Task Main(string[] args)
+    public async Task<string> DownloadStringAsync(string url)
     {
-        try
+        using (var httpClient = new HttpClient())
         {
-            using (var httpClient = new HttpClient())
-            {
-                var response = await httpClient.GetAsync("https://www.example.com");
-                response.EnsureSuccessStatusCode();
-                var content = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(content);
-            }
-        }
-        catch (HttpRequestException ex)
-        {
-            Console.WriteLine($"HTTP Request Error: {ex.Message}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+            return await httpClient.GetStringAsync(url);
         }
     }
 }
 
 
-// Bad Code: Lacks error handling, uses synchronous I/O blocking the main thread, and doesn't manage resources properly.
-
+// Bad Code: Blocking the main thread during I/O-bound operations.
 using System;
-using System.IO;
 using System.Net;
 
 public class BadCodeExample
 {
-    public static void Main(string[] args)
+    public string DownloadString(string url)
     {
-        try
+        using (var webClient = new WebClient())
         {
-            var request = WebRequest.Create("https://www.example.com");
-            using (var response = request.GetResponse())
-            using (var stream = response.GetResponseStream())
-            using (var reader = new StreamReader(stream))
-            {
-                Console.WriteLine(reader.ReadToEnd());
-            }
-        }
-        catch (Exception ex)
-        {
-            //This is a very poor error handling
-            Console.WriteLine("Error: " + ex.Message);
+            return webClient.DownloadString(url);
         }
     }
 }
+
+//Good Code: Implementing IDisposable for proper resource management.
+
+public class GoodResourceManagement : IDisposable
+{
+    private readonly System.IO.Stream _stream;
+
+    public GoodResourceManagement(string filePath)
+    {
+        _stream = new System.IO.FileStream(filePath, System.IO.FileMode.Open);
+    }
+
+
+    public void Dispose()
+    {
+        _stream?.Dispose();
+    }
+}
+
+
+//Bad Code: Failing to implement IDisposable, leading to resource leaks.
+
+public class BadResourceManagement
+{
+    private readonly System.IO.Stream _stream;
+
+    public BadResourceManagement(string filePath)
+    {
+        _stream = new System.IO.FileStream(filePath, System.IO.FileMode.Open);
+    }
+}
+
