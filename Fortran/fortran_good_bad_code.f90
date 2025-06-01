@@ -1,54 +1,46 @@
 program good_code
   implicit none
-  integer, allocatable :: array(:)
+  integer, allocatable :: arr(:)
   integer :: n, i, sum
-
-  ! Get array size from user
+  
   print *, "Enter the size of the array:"
   read *, n
-
-  ! Allocate memory for the array
-  allocate(array(1:n), stat=i)
-  if (i /= 0) then
-    print *, "Memory allocation failed."
-    stop
-  end if
-
-  ! Read array elements from user
+  
+  allocate(arr(n))
+  
   print *, "Enter the array elements:"
-  read *, (array(i), i=1,n)
-
-  ! Calculate the sum of array elements
+  read *, (arr(i), i = 1, n)
+  
   sum = 0
   do i = 1, n
-    sum = sum + array(i)
-  end do
-
-  ! Print the sum
-  print *, "The sum of the array elements is:", sum
-
-  ! Deallocate the array
-  deallocate(array)
-
+    sum = sum + arr(i)
+  enddo
+  
+  print *, "Sum of array elements:", sum
+  
+  deallocate(arr)
 end program good_code
 
 
 program bad_code
   implicit none
-  integer :: array(100), n, i, sum
-
-  ! No error handling for potential array bounds issues
-  print *, "Enter the number of elements (max 100):"
+  integer :: arr(100), n, i, sum
+  
+  print *, "Enter the size of the array:"
   read *, n
+  
+  if (n > 100) then
+    print *, "Error: Array size exceeds limit."
+    stop
+  endif
 
   print *, "Enter the array elements:"
-  read *, (array(i), i=1,n)
-
+  read *, (arr(i), i = 1, n)
+  
   sum = 0
   do i = 1, n
-    sum = sum + array(i)
-  end do
-
-  print *, "The sum is:", sum
-
+    sum = sum + arr(i)
+  enddo
+  
+  print *, "Sum of array elements:", sum
 end program bad_code
