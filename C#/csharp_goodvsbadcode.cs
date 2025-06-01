@@ -1,63 +1,90 @@
-// Good Code: Using asynchronous programming for I/O-bound operations.
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
+// Good Code: Using a more advanced pattern like the Strategy pattern for flexible logging.
 
-public class GoodCodeExample
+public interface ILogger
 {
-    public async Task<string> DownloadStringAsync(string url)
+    void Log(string message);
+}
+
+public class ConsoleLogger : ILogger
+{
+    public void Log(string message) => Console.WriteLine($"Console: {message}");
+}
+
+public class FileLogger : ILogger
+{
+    private readonly string _filePath;
+
+    public FileLogger(string filePath) => _filePath = filePath;
+
+    public void Log(string message)
     {
-        using (var httpClient = new HttpClient())
+        File.AppendAllText(_filePath, $"File: {message}{Environment.NewLine}");
+    }
+}
+
+
+public class MyClass
+{
+    private readonly ILogger _logger;
+
+    public MyClass(ILogger logger) => _logger = logger;
+
+    public void DoSomething()
+    {
+        _logger.Log("Something happened!"); 
+    }
+}
+
+
+// Usage
+var consoleLogger = new ConsoleLogger();
+var fileLogger = new FileLogger("log.txt");
+
+var myClassConsole = new MyClass(consoleLogger);
+var myClassFile = new MyClass(fileLogger);
+
+myClassConsole.DoSomething();
+myClassFile.DoSomething();
+
+
+
+// Bad Code:  Illustrates tight coupling and lack of error handling.
+
+public class BadClass
+{
+    public void DoSomethingElse()
+    {
+        try
         {
-            return await httpClient.GetStringAsync(url);
+            // Simulate potential file IO error
+            File.WriteAllText("somefile.txt", "Some text");
+            Console.WriteLine("File written successfully (Bad Code)");
+        }
+        catch (Exception ex)
+        {
+            //Poor error handling -  just swallowing the exception.
+        }
+
+        //Directly accessing database, lacks parameterization for SQL injection vulnerability.  
+        string connectionString = "Data Source=.;Initial Catalog=MyDatabase;Integrated Security=True";
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            string sql = "SELECT * FROM MyTable WHERE id = '" + someUserInput + "'"; //SQL Injection vulnerability!
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    //Process the reader
+                }
+            }
         }
     }
 }
 
+//Illustrates lack of input validation
+string someUserInput = Console.ReadLine();
+var badClassInstance = new BadClass();
+badClassInstance.DoSomethingElse();
 
-// Bad Code: Blocking the main thread during I/O-bound operations.
-using System;
-using System.Net;
-
-public class BadCodeExample
-{
-    public string DownloadString(string url)
-    {
-        using (var webClient = new WebClient())
-        {
-            return webClient.DownloadString(url);
-        }
-    }
-}
-
-//Good Code: Implementing IDisposable for proper resource management.
-
-public class GoodResourceManagement : IDisposable
-{
-    private readonly System.IO.Stream _stream;
-
-    public GoodResourceManagement(string filePath)
-    {
-        _stream = new System.IO.FileStream(filePath, System.IO.FileMode.Open);
-    }
-
-
-    public void Dispose()
-    {
-        _stream?.Dispose();
-    }
-}
-
-
-//Bad Code: Failing to implement IDisposable, leading to resource leaks.
-
-public class BadResourceManagement
-{
-    private readonly System.IO.Stream _stream;
-
-    public BadResourceManagement(string filePath)
-    {
-        _stream = new System.IO.FileStream(filePath, System.IO.FileMode.Open);
-    }
-}
 
