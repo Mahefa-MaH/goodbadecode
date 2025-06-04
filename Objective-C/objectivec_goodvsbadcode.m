@@ -1,61 +1,47 @@
-// Good Code: Using blocks for asynchronous operations and error handling
+// Good Code: Using blocks for asynchronous operations and proper error handling
 
-#import <Foundation/Foundation.h>
+@interface MyObject : NSObject
 
-@interface MyManager : NSObject
-
-- (void)performLongRunningTaskWithCompletion:(void (^)(NSData *data, NSError *error))completion;
+- (void)performOperationWithCompletion:(void (^)(NSError *error))completion;
 
 @end
 
-@implementation MyManager
+@implementation MyObject
 
-- (void)performLongRunningTaskWithCompletion:(void (^)(NSData *data, NSError *error))completion {
+- (void)performOperationWithCompletion:(void (^)(NSError *error))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate a long-running task
-        sleep(2); 
-        NSData *data = [@"This is some data" dataUsingEncoding:NSUTF8StringEncoding];
+        // Simulate some asynchronous operation that might fail
+        BOOL success = arc4random_uniform(2) == 0; 
         NSError *error = nil;
-
-        if (/* some error condition */) {
-            error = [NSError errorWithDomain:@"MyDomain" code:1001 userInfo:@{NSLocalizedDescriptionKey: @"Something went wrong"}];
+        if (!success) {
+            error = [NSError errorWithDomain:@"MyDomain" code:1 userInfo:@{NSLocalizedDescriptionKey: @"Operation failed"}];
         }
-
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(data, error);
+            completion(error);
         });
     });
 }
 
 @end
 
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        MyManager *manager = [[MyManager alloc] init];
-        [manager performLongRunningTaskWithCompletion:^(NSData *data, NSError *error) {
-            if (error) {
-                NSLog(@"Error: %@", error);
-            } else {
-                NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                NSLog(@"Result: %@", result);
-            }
-        }];
-        [[NSRunLoop currentRunLoop] run]; // Keep the main thread running
+
+// Bad Code:  Lack of error handling, improper memory management, and blocking the main thread
+
+@interface BadObject : NSObject
+
+- (void)performBadOperation;
+
+@end
+
+@implementation BadObject
+
+- (void)performBadOperation {
+    //Simulate a long running operation on the main thread, blocking the UI
+    for (int i = 0; i < 1000000000; i++) {
+       //do something
     }
-    return 0;
+    //No error handling
 }
 
 
-
-// Bad Code:  Ignoring error handling and using deprecated methods
-
-#import <Foundation/Foundation.h>
-
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        NSString *filePath = @"/path/to/file.txt"; // Replace with a valid path
-        NSString *fileContent = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil]; //Ignoring error
-        NSLog(@"File content: %@", fileContent);
-    }
-    return 0;
-}
+@end
