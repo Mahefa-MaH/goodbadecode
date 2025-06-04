@@ -1,0 +1,58 @@
+// Good Sass: Using Mixins for Reusable Styles
+
+@mixin button-style($color, $background-color) {
+  padding: 10px 20px;
+  border: 2px solid $color;
+  border-radius: 5px;
+  background-color: $background-color;
+  color: $color;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: darken($background-color, 10%);
+  }
+}
+
+
+.primary-button {
+  @include button-style(blue, #fff);
+}
+
+.secondary-button {
+  @include button-style(white, #333);
+}
+
+
+// Bad Sass: Repeating Styles
+
+.primary-button {
+  padding: 10px 20px;
+  border: 2px solid blue;
+  border-radius: 5px;
+  background-color: #fff;
+  color: blue;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: darken(#fff, 10%);
+  }
+}
+
+.secondary-button {
+  padding: 10px 20px;
+  border: 2px solid white;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: darken(#333, 10%);
+  }
+}
