@@ -1,4 +1,4 @@
-// Good Code: Using event listeners and a custom event for better organization and decoupling.
+// Good Code: Using event listeners and a custom event for better organization and maintainability.
 
 package
 {
@@ -10,29 +10,43 @@ package
 	{
 		public function GoodCodeExample()
 		{
-			// Create a button
-			var button:Sprite = new Sprite();
-			button.graphics.beginFill(0xFF0000);
-			button.graphics.drawRect(0, 0, 100, 50);
-			button.graphics.endFill();
-			button.x = 50;
-			button.y = 50;
-			addChild(button);
+			// Create a custom event
+			var myEvent:MyEvent = new MyEvent(MyEvent.MY_EVENT);
 
-			// Add a mouse click event listener to the button
-			button.addEventListener(MouseEvent.CLICK, handleClick);
+			// Add an event listener for the custom event
+			addEventListener(MyEvent.MY_EVENT, handleMyEvent);
+
+			// Dispatch the custom event when the mouse is clicked
+			addEventListener(MouseEvent.CLICK, dispatchMyEvent);
 		}
 
-		// Handle the click event, dispatch a custom event
-		private function handleClick(event:MouseEvent):void
+		private function dispatchMyEvent(e:MouseEvent):void
 		{
-			var customEvent:Event = new Event("buttonClicked");
-			dispatchEvent(customEvent);
+			dispatchEvent(new MyEvent(MyEvent.MY_EVENT));
+		}
+
+		private function handleMyEvent(e:MyEvent):void
+		{
+			trace("Custom event handled:", e.data);
 		}
 	}
 }
 
-// Bad Code: Directly manipulating other objects, tightly coupled and hard to maintain.
+// Custom event class
+class MyEvent extends Event
+{
+	public static const MY_EVENT:String = "myEvent";
+	public var data:String;
+
+	public function MyEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
+	{
+		super(type, bubbles, cancelable);
+		this.data = data;
+	}
+}
+
+
+// Bad Code:  Using direct function calls and global variables, leading to tight coupling and poor maintainability.
 
 package
 {
@@ -41,32 +55,22 @@ package
 
 	public class BadCodeExample extends Sprite
 	{
-		private var otherObject:Sprite;
+		public var globalVariable:String = "Initial Value";
 
 		public function BadCodeExample()
 		{
-			// Create a button
-			var button:Sprite = new Sprite();
-			button.graphics.beginFill(0x0000FF);
-			button.graphics.drawRect(0, 0, 100, 50);
-			button.graphics.endFill();
-			button.x = 150;
-			button.y = 50;
-			addChild(button);
-			
-			otherObject = new Sprite();
-			otherObject.graphics.beginFill(0x00FF00);
-			otherObject.graphics.drawRect(0,0,50,50);
-			otherObject.graphics.endFill();
-			otherObject.x = 200;
-			otherObject.y = 150;
-			addChild(otherObject);
+			addEventListener(MouseEvent.CLICK, handleClick);
+		}
 
-			// Directly manipulate other object on click
-			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
-				otherObject.x += 20;
-			});
+		private function handleClick(e:MouseEvent):void
+		{
+			modifyGlobalVariable();
+			trace("Global variable modified:", globalVariable);
+		}
+
+		private function modifyGlobalVariable():void
+		{
+			globalVariable = "Modified Value";
 		}
 	}
 }
-
