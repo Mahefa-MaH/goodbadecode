@@ -1,106 +1,72 @@
-// Good Code: Using a custom event for communication between classes.
+// Good Code: Using event listeners and a state machine for robust UI interaction.
 
-package com.example
+package
 {
-    import flash.events.Event;
-    import flash.events.EventDispatcher;
+	import flash.display.Sprite;
+	import flash.events.MouseEvent;
 
-    public class DataManager extends EventDispatcher
-    {
-        private var _data:Array;
+	public class GoodCodeExample extends Sprite
+	{
+		private var state:String = "idle";
 
-        public function DataManager()
-        {
-            _data = [];
-        }
-
-        public function loadData(url:String):void
-        {
-            //Simulate loading data from a URL.  In reality, you would use a Loader or URLRequest here.
-            var data:Array = [1,2,3,4,5];
-            _data = data;
-            dispatchEvent(new DataEvent(DataEvent.DATA_LOADED, data));
-        }
-    }
-}
-
-package com.example
-{
-    import flash.events.Event;
-
-    public class DataEvent extends Event
-    {
-        public static const DATA_LOADED:String = "dataLoaded";
-        public var data:Array;
-        public function DataEvent(type:String, data:Array)
-        {
-            super(type, false, false);
-            this.data = data;
-        }
-    }
-}
-
-package com.example
-{
-    import flash.display.Sprite;
-    import flash.events.EventDispatcher;
+		public function GoodCodeExample()
+		{
+			//Button Creation
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0xFF0000);
+			button.graphics.drawRect(0,0,100,50);
+			button.graphics.endFill();
+			button.x = 50;
+			button.y = 50;
+			addChild(button);
 
 
-    public class DataDisplay extends Sprite
-    {
-        private var _dataManager:DataManager;
+			button.addEventListener(MouseEvent.CLICK, onClick);
+		}
 
-        public function DataDisplay()
-        {
-            _dataManager = new DataManager();
-            _dataManager.addEventListener(DataEvent.DATA_LOADED, onDataLoaded);
-            _dataManager.loadData("data.xml");
-        }
-
-        private function onDataLoaded(event:DataEvent):void
-        {
-            trace("Data loaded:", event.data);
-        }
-    }
+		private function onClick(e:MouseEvent):void
+		{
+			switch (state)
+			{
+				case "idle":
+					trace("Button Clicked: Performing Action A");
+					state = "active";
+					break;
+				case "active":
+					trace("Button Clicked: Performing Action B");
+					state = "idle";
+					break;
+			}
+		}
+	}
 }
 
 
+// Bad Code:  Direct manipulation of display objects without event listeners, leading to unpredictable behavior and difficulty in maintenance.
 
-// Bad Code: Tight coupling and lack of error handling.
-
-package com.example.bad
+package
 {
-    import flash.display.Sprite;
+	import flash.display.Sprite;
 
-    public class BadDataManager extends Sprite
-    {
-        public var data:Array;
+	public class BadCodeExample extends Sprite
+	{
+		public function BadCodeExample()
+		{
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0x0000FF);
+			button.graphics.drawRect(0,0,100,50);
+			button.graphics.endFill();
+			button.x = 150;
+			button.y = 50;
+			addChild(button);
 
-        public function BadDataManager()
-        {
-            data = [10,20,30,40,50]; //Hardcoded Data
-        }
 
-        public function getData():Array
-        {
-            return data;
-        }
-    }
-}
-
-package com.example.bad
-{
-    import flash.display.Sprite;
-
-    public class BadDataDisplay extends Sprite
-    {
-        private var _dataManager:BadDataManager;
-
-        public function BadDataDisplay()
-        {
-            _dataManager = new BadDataManager();
-            trace("Data:", _dataManager.getData());
-
-        }
-    }
+			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{
+				this.graphics.clear(); //Directly manipulating button graphics.  Bad practice.
+				this.graphics.beginFill(Math.random()*0xFFFFFF);
+				this.graphics.drawRect(0,0,100,50);
+				this.graphics.endFill();
+			});
+		}
+	}
 }
