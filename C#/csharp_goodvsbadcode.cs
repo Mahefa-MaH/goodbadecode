@@ -1,48 +1,58 @@
-// Good Code: Using asynchronous programming for I/O-bound operations.
+// Good Code Example: Using Async/Await for I/O-bound operations
+
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 public class GoodCodeExample
 {
-    public async Task<string> GetWebsiteContentAsync(string url)
+    public static async Task Main(string[] args)
     {
-        using (var httpClient = new HttpClient())
+        var httpClient = new HttpClient();
+        try
         {
-            try
-            {
-                return await httpClient.GetStringAsync(url);
-            }
-            catch (HttpRequestException ex)
-            {
-                //Robust error handling.  Log the exception and return a user-friendly message.
-                Console.Error.WriteLine($"Error accessing {url}: {ex.Message}");
-                return $"Error: Could not retrieve content from {url}";
-            }
+            string result = await GetWebsiteContentAsync(httpClient, "https://www.example.com");
+            Console.WriteLine(result.Substring(0, 100)); //Print first 100 chars
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            httpClient.Dispose();
+        }
+    }
+
+    private static async Task<string> GetWebsiteContentAsync(HttpClient client, string url)
+    {
+        HttpResponseMessage response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync();
     }
 }
 
 
-// Bad Code: Blocking the main thread for I/O-bound operations.
+// Bad Code Example: Blocking I/O and poor error handling.
+
 using System;
 using System.Net;
 
 public class BadCodeExample
 {
-    public string GetWebsiteContent(string url)
+    public static void Main(string[] args)
     {
-        using (var webClient = new WebClient())
+        try
         {
-            try
+            using (var client = new WebClient())
             {
-                return webClient.DownloadString(url);
+                string result = client.DownloadString("https://www.example.com");
+                Console.WriteLine(result.Substring(0,100)); //Print first 100 chars
             }
-            catch (WebException ex)
-            {
-                //Poor error handling.  Simply returns the exception message to the user.
-                return ex.Message;
-            }
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("Something went wrong!"); // Vague error message
         }
     }
 }
