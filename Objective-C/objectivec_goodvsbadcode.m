@@ -1,23 +1,27 @@
-// Good Code: Using blocks for asynchronous operations and proper error handling
+// Good Code: Using blocks for asynchronous operations and error handling
 
 @interface MyObject : NSObject
 
-- (void)performOperationWithCompletion:(void (^)(NSError *error))completion;
+- (void)performOperationWithCompletion:(void (^)(NSData *data, NSError *error))completion;
 
 @end
 
 @implementation MyObject
 
-- (void)performOperationWithCompletion:(void (^)(NSError *error))completion {
+- (void)performOperationWithCompletion:(void (^)(NSData *data, NSError *error))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate some asynchronous operation that might fail
-        BOOL success = arc4random_uniform(2) == 0; 
+        // Simulate network operation
+        NSData *data = [@"This is some data" dataUsingEncoding:NSUTF8StringEncoding];
         NSError *error = nil;
-        if (!success) {
-            error = [NSError errorWithDomain:@"MyDomain" code:1 userInfo:@{NSLocalizedDescriptionKey: @"Operation failed"}];
+
+        //Simulate error condition.
+        if (arc4random_uniform(2) == 0) {
+            error = [NSError errorWithDomain:@"MyDomain" code:1001 userInfo:@{NSLocalizedDescriptionKey: @"Simulated Error"}];
+            data = nil;
         }
+
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(error);
+            completion(data, error);
         });
     });
 }
@@ -25,23 +29,34 @@
 @end
 
 
-// Bad Code:  Lack of error handling, improper memory management, and blocking the main thread
+// Bad Code: Ignoring error handling and using outdated techniques
 
-@interface BadObject : NSObject
-
-- (void)performBadOperation;
-
+@interface MyObjectBad : NSObject
+- (NSData*)performOperation;
 @end
 
-@implementation BadObject
-
-- (void)performBadOperation {
-    //Simulate a long running operation on the main thread, blocking the UI
-    for (int i = 0; i < 1000000000; i++) {
-       //do something
-    }
-    //No error handling
+@implementation MyObjectBad
+- (NSData*)performOperation {
+    //Simulate network operation.  Error handling completely absent.
+    return [@"This is some data" dataUsingEncoding:NSUTF8StringEncoding];
 }
-
-
 @end
+
+
+// Example usage of Good Code
+MyObject *obj = [[MyObject alloc] init];
+[obj performOperationWithCompletion:^(NSData *data, NSError *error) {
+    if (error) {
+        NSLog(@"Error: %@", error);
+    } else {
+        NSLog(@"Data: %@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+    }
+}];
+
+
+// Example usage of Bad Code (Illustrative, avoid in production)
+MyObjectBad *objBad = [[MyObjectBad alloc] init];
+NSData *dataBad = [objBad performOperation];
+NSString *strBad = [[NSString alloc] initWithData:dataBad encoding:NSUTF8StringEncoding];
+NSLog(@"Data (Bad): %@", strBad);
+
