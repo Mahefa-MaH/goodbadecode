@@ -1,76 +1,66 @@
-// Good Code: Using event listeners and a custom event for better organization and maintainability.
+// Good Code: Using Event Listeners and Custom Events for Modular Design
 
 package
 {
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.events.MouseEvent;
+    import flash.events.Event;
+    import flash.events.EventDispatcher;
 
-	public class GoodCodeExample extends Sprite
-	{
-		public function GoodCodeExample()
-		{
-			// Create a custom event
-			var myEvent:MyEvent = new MyEvent(MyEvent.MY_EVENT);
+    public class GoodCode extends EventDispatcher
+    {
+        public function GoodCode()
+        {
+            addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, onMyCustomEvent);
+        }
 
-			// Add an event listener for the custom event
-			addEventListener(MyEvent.MY_EVENT, handleMyEvent);
+        private function onMyCustomEvent(event:MyCustomEvent):void
+        {
+            trace("Good Code: Event received:", event.data);
+        }
 
-			// Dispatch the custom event when the mouse is clicked
-			addEventListener(MouseEvent.CLICK, dispatchMyEvent);
-		}
-
-		private function dispatchMyEvent(e:MouseEvent):void
-		{
-			dispatchEvent(new MyEvent(MyEvent.MY_EVENT));
-		}
-
-		private function handleMyEvent(e:MyEvent):void
-		{
-			trace("Custom event handled:", e.data);
-		}
-	}
+        public function triggerEvent(data:String):void
+        {
+            dispatchEvent(new MyCustomEvent(MyCustomEvent.MY_CUSTOM_EVENT, false, false, data));
+        }
+    }
 }
 
-// Custom event class
-class MyEvent extends Event
-{
-	public static const MY_EVENT:String = "myEvent";
-	public var data:String;
-
-	public function MyEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
-	{
-		super(type, bubbles, cancelable);
-		this.data = data;
-	}
-}
-
-
-// Bad Code:  Using direct function calls and global variables, leading to tight coupling and poor maintainability.
 
 package
 {
-	import flash.display.Sprite;
-	import flash.events.MouseEvent;
+    import flash.events.Event;
 
-	public class BadCodeExample extends Sprite
-	{
-		public var globalVariable:String = "Initial Value";
+    public class MyCustomEvent extends Event
+    {
+        public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
+        public var data:String;
 
-		public function BadCodeExample()
-		{
-			addEventListener(MouseEvent.CLICK, handleClick);
-		}
+        public function MyCustomEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
+        {
+            super(type, bubbles, cancelable);
+            this.data = data;
+        }
+    }
+}
 
-		private function handleClick(e:MouseEvent):void
-		{
-			modifyGlobalVariable();
-			trace("Global variable modified:", globalVariable);
-		}
 
-		private function modifyGlobalVariable():void
-		{
-			globalVariable = "Modified Value";
-		}
-	}
+// Bad Code: Tight Coupling and Lack of Event Handling
+
+package
+{
+    public class BadCode
+    {
+        private var _data:String;
+
+        public function BadCode(data:String)
+        {
+            _data = data;
+            process();
+        }
+
+        private function process():void
+        {
+            trace("Bad Code: Processing:", _data);
+            // tightly coupled and no easy way to extend or decouple
+        }
+    }
 }
