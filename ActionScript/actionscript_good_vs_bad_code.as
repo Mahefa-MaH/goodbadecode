@@ -1,56 +1,58 @@
-// Good Code: Using a custom event for better code organization and maintainability.
+// Good Code: Using a custom event for better decoupling and maintainability.
 
 package
 {
-    public class GoodCodeExample extends MovieClip
-    {
-        public function GoodCodeExample()
-        {
-            addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleMyCustomEvent);
-            dispatchEvent(new MyCustomEvent(MyCustomEvent.MY_CUSTOM_EVENT));
-        }
+	public class GoodCodeExample extends MovieClip
+	{
+		public function GoodCodeExample()
+		{
+			addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, onMyCustomEvent);
+			dispatchEvent(new MyCustomEvent( "Data from Event" ));
+		}
 
-        private function handleMyCustomEvent(event:MyCustomEvent):void
-        {
-            trace("Custom event received: ", event.data);
-        }
-    }
+		private function onMyCustomEvent(event:MyCustomEvent):void
+		{
+			trace("Received data: ", event.data);
+		}
+	}
 }
 
 package
 {
-    public class MyCustomEvent extends Event
-    {
-        public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
-        public var data:String;
+	public class MyCustomEvent extends Event
+	{
+		public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
+		public var data:String;
 
-        public function MyCustomEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
-        {
-            super(type, bubbles, cancelable);
-            this.data = data;
-        }
-    }
+		public function MyCustomEvent(data:String)
+		{
+			super(MY_CUSTOM_EVENT, false, false);
+			this.data = data;
+		}
+	}
 }
 
 
-// Bad Code: Tight coupling and lack of event handling.  Difficult to maintain and extend.
+// Bad Code: Tight coupling and lack of error handling.
 
-package 
+package
 {
-    public class BadCodeExample extends MovieClip
-    {
-        private var _myVar:String = "Initial Value";
+	public class BadCodeExample extends MovieClip
+	{
+		private var myVariable:Object;
 
-        public function BadCodeExample()
-        {
-            someFunctionThatChangesMyVar();
-            trace("Value of _myVar: " + _myVar);
+		public function BadCodeExample()
+		{
+			myVariable = { name: "test"};
+			accessData();
 
-        }
+		}
 
-        private function someFunctionThatChangesMyVar():void
-        {
-            _myVar = "Modified Value";
-        }
-    }
+		private function accessData():void
+		{
+			//Potentially dangerous. No error handling and directly accessing a potential null object.
+			trace(myVariable.name.toUpperCase());
+
+		}
+	}
 }
