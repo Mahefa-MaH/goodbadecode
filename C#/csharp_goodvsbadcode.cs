@@ -1,58 +1,50 @@
-// Good Code Example: Using Async/Await for I/O-bound operations
-
+// Good Code: Using async/await for asynchronous operations and leveraging C# features.
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 public class GoodCodeExample
 {
-    public static async Task Main(string[] args)
+    public async Task<string> GetWebsiteContentAsync(string url)
     {
-        var httpClient = new HttpClient();
-        try
+        using (var httpClient = new HttpClient())
         {
-            string result = await GetWebsiteContentAsync(httpClient, "https://www.example.com");
-            Console.WriteLine(result.Substring(0, 100)); //Print first 100 chars
+            try
+            {
+                var response = await httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode(); // Throw if not a success code.
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                //Robust error handling. Log or handle exception appropriately.
+                Console.WriteLine($"Error fetching URL: {ex.Message}");
+                return null; // Or throw a custom exception for better control
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+                return null;
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
-        finally
-        {
-            httpClient.Dispose();
-        }
-    }
-
-    private static async Task<string> GetWebsiteContentAsync(HttpClient client, string url)
-    {
-        HttpResponseMessage response = await client.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync();
     }
 }
 
 
-// Bad Code Example: Blocking I/O and poor error handling.
-
-using System;
-using System.Net;
-
+// Bad Code:  Ignoring exceptions, blocking calls, poor error handling, and lack of async.
 public class BadCodeExample
 {
-    public static void Main(string[] args)
+    public string GetWebsiteContent(string url)
     {
         try
         {
-            using (var client = new WebClient())
-            {
-                string result = client.DownloadString("https://www.example.com");
-                Console.WriteLine(result.Substring(0,100)); //Print first 100 chars
-            }
+            var httpClient = new HttpClient();
+            var response = httpClient.GetAsync(url).Result; // Blocking call, prone to deadlocks.
+            return response.Content.ReadAsStringAsync().Result; //Another blocking call.
         }
-        catch (Exception)
+        catch
         {
-            Console.WriteLine("Something went wrong!"); // Vague error message
+            return ""; // Swallowing exceptions - Very bad practice!
         }
     }
 }
