@@ -1,59 +1,51 @@
-// Good Code: Using immutable data structures and functional programming principles for efficient and predictable behavior.
+// Good Code: Using immutable data structures and pattern matching for robust and efficient code.
+object GoodCode {
+  sealed trait Result[T]
+  case class Success[T](value: T) extends Result[T]
+  case class Failure(error: String) extends Result[Nothing]
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
-
-object GoodCodeExample extends App {
-
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
-
-  case class User(id: Int, name: String)
-
-  val users: Seq[User] = Seq(User(1, "Alice"), User(2, "Bob"), User(3, "Charlie"))
-
-  def findUserById(userId: Int): Future[Option[User]] = Future {
-    users.find(_.id == userId)
-  }
-
-
-  val futureUser: Future[Option[User]] = findUserById(2)
-
-  futureUser.onComplete {
-    case Success(user) => println(s"Found user: $user")
-    case Failure(exception) => println(s"Error: ${exception.getMessage}")
-  }
-
-  Thread.sleep(1000) // allow time for future to complete.  Not ideal, but for demo.
-}
-
-
-
-// Bad Code: Mutable state, side effects, and lack of error handling lead to unpredictable and hard-to-maintain code.
-
-
-object BadCodeExample extends App {
-
-  var users: Array[User] = Array(User(1,"Alice"), User(2,"Bob"), User(3, "Charlie"))
-
-  def findUserById(userId: Int): Option[User] = {
-    var foundUser: Option[User] = None
-    for(user <- users){
-      if(user.id == userId){
-        foundUser = Some(user)
-      }
+  def processData(data: String): Result[Int] = {
+    try {
+      val num = data.toInt
+      if (num > 0) Success(num) else Failure("Number must be positive")
+    } catch {
+      case e: NumberFormatException => Failure(s"Invalid input: ${e.getMessage}")
     }
-    foundUser
   }
 
-
-  val user = findUserById(2)
-  println(user)
-
-
-  users(0) = User(1, "Updated Alice") // Mutable state, dangerous side effects
-
-  println(findUserById(1))
-
+  def main(args: Array[String]): Unit = {
+    processData("10").match {
+      case Success(value) => println(s"Success: $value")
+      case Failure(error) => println(s"Failure: $error")
+    }
+    processData("-5").match {
+      case Success(value) => println(s"Success: $value")
+      case Failure(error) => println(s"Failure: $error")
+    }
+    processData("abc").match {
+      case Success(value) => println(s"Success: $value")
+      case Failure(error) => println(s"Failure: $error")
+    }
+  }
 }
 
-case class User(id:Int, name:String)
+
+// Bad Code:  Mutable variables, exception handling without specific error types, and unclear logic.
+object BadCode {
+  def processData(data: String): Int = {
+    var result = 0
+    try {
+      result = data.toInt
+      if (result < 0) throw new Exception("Negative number")
+    } catch {
+      case e: Exception => println("Error: " + e.getMessage)
+    }
+    result
+  }
+
+  def main(args: Array[String]): Unit = {
+    println(processData("10"))
+    println(processData("-5"))
+    println(processData("abc"))
+  }
+}
