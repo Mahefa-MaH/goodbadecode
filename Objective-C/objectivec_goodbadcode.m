@@ -1,60 +1,69 @@
-// Good Code: Using blocks for asynchronous operations and proper error handling
+// Good Code: Using Blocks for Asynchronous Operations
 
 #import <Foundation/Foundation.h>
 
-@interface MyDataFetcher : NSObject
+@interface MyManager : NSObject
 
-- (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion;
+- (void)performLongRunningTaskWithCompletion:(void (^)(NSData *data, NSError *error))completion;
 
 @end
 
-@implementation MyDataFetcher
+@implementation MyManager
 
-- (void)fetchDataWithCompletion:(void (^)(NSData *data, NSError *error))completion {
+- (void)performLongRunningTaskWithCompletion:(void (^)(NSData *data, NSError *error))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate fetching data (replace with actual network request)
-        sleep(2);  
-        NSData *data = [@"Sample Data" dataUsingEncoding:NSUTF8StringEncoding];
-        NSError *error = nil;
-        
+        // Simulate a long-running task
+        sleep(3); 
+        NSData *data = [@"Long-running task completed" dataUsingEncoding:NSUTF8StringEncoding];
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(data, error);
+            completion(data, nil);
         });
     });
 }
 
 @end
 
-
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        MyDataFetcher *fetcher = [[MyDataFetcher alloc] init];
-        [fetcher fetchDataWithCompletion:^(NSData *data, NSError *error) {
+        MyManager *manager = [[MyManager alloc] init];
+        [manager performLongRunningTaskWithCompletion:^(NSData *data, NSError *error) {
             if (error) {
-                NSLog(@"Error fetching data: %@", error);
+                NSLog(@"Error: %@", error);
             } else {
-                NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                NSLog(@"Fetched data: %@", string);
+                NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                NSLog(@"Result: %@", result);
             }
         }];
-        [[NSRunLoop currentRunLoop] run]; //Keep the main thread alive until the asynchronous operation is complete.
+        [[NSRunLoop currentRunLoop] run];
     }
     return 0;
 }
 
 
-// Bad Code: Ignoring errors, improper memory management, and blocking the main thread
+// Bad Code: Improper Error Handling and Synchronous Network Calls
 
 #import <Foundation/Foundation.h>
 
+@interface BadManager : NSObject
+- (NSData *)performSynchronousNetworkRequest;
+@end
+
+@implementation BadManager
+- (NSData *)performSynchronousNetworkRequest {
+    // Simulate a network request.  This blocks the main thread!
+    sleep(3);
+    return [@"Result from network request (no error handling)" dataUsingEncoding:NSUTF8StringEncoding];
+}
+@end
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        //Simulate a long running task that blocks the main thread.
-        sleep(5);
-        NSLog(@"This blocks the main thread!");
-        // Memory leak: no release of the string.
-        NSString* str = [NSString stringWithFormat:@"This is a string"];
-        NSLog(@"%@", str);
-        return 0;
+        BadManager *badManager = [[BadManager alloc] init];
+        NSData *data = [badManager performSynchronousNetworkRequest];
+        if(data) {
+            NSString *result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            NSLog(@"Result: %@", result);
+        }
     }
+    return 0;
 }
