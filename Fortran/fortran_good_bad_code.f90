@@ -1,57 +1,69 @@
 program good_code
   implicit none
-  integer, allocatable :: array(:)
+  integer, allocatable :: arr(:)
   integer :: n, i, sum
-
-  ! Get the size of the array from the user.
+  
+  ! Get array size from user.  Error handling included.
   print *, "Enter the size of the array:"
   read *, n
-
-  ! Allocate the array dynamically.
-  allocate(array(1:n), stat=i)
-  if (i /= 0) then
-    print *, "Allocation failed!"
+  if (n <= 0) then
+    print *, "Error: Array size must be positive."
     stop
   end if
 
-  ! Get the array elements from the user.
-  print *, "Enter the array elements:"
-  read *, (array(i), i=1, n)
+  ! Allocate memory dynamically.
+  allocate(arr(n), stat=i)
+  if(i /= 0) then
+    print *, "Error allocating memory."
+    stop
+  end if
 
-  ! Calculate the sum of the array elements.
-  sum = 0
+  ! Populate array.  Input validation included.
+  print *, "Enter the array elements:"
   do i = 1, n
-    sum = sum + array(i)
+    read *, arr(i)
+    if (arr(i) < 0) then
+      print *, "Error: Array elements must be non-negative."
+      deallocate(arr)
+      stop
+    end if
   end do
 
-  ! Print the sum of the array elements.
-  print *, "The sum of the array elements is:", sum
+  ! Calculate sum using a loop.
+  sum = 0
+  do i = 1, n
+    sum = sum + arr(i)
+  end do
 
-  ! Deallocate the array.
-  deallocate(array)
+  ! Print the sum.
+  print *, "Sum of array elements:", sum
+
+  ! Deallocate memory.
+  deallocate(arr)
 
 end program good_code
 
 
 program bad_code
   implicit none
-  integer :: array(100), n, i, sum
+  integer :: arr(100), n, i, sum
 
-  ! Get the size of the array from the user.  No error handling for exceeding array bounds.
-  print *, "Enter the size of the array:"
+  ! No input validation.
+  print *, "Enter array size:"
   read *, n
 
-  ! Get the array elements from the user.  No error handling for exceeding array bounds.
-  print *, "Enter the array elements:"
-  read *, (array(i), i=1, n)
-
-  ! Calculate the sum of the array elements.
-  sum = 0
+  ! No dynamic memory allocation; fixed size array, potential buffer overflow.
+  print *, "Enter array elements:"
   do i = 1, n
-    sum = sum + array(i)
+    read *, arr(i)
   end do
 
-  ! Print the sum of the array elements.
-  print *, "The sum of the array elements is:", sum
+  ! No error handling for out-of-bounds access.
+  sum = 0
+  do i = 1, n
+    sum = sum + arr(i)
+  end do
+
+  print *, "Sum:", sum
 
 end program bad_code
