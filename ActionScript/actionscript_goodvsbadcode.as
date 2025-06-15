@@ -1,60 +1,53 @@
-// Good Code: Using EventListeners and a custom Event
+// Good Code: Using event listeners and a custom class for better organization and maintainability.
 
 package
 {
-	import flash.display.Sprite;
-	import flash.events.Event;
-
-	public class GoodCodeExample extends Sprite
+	public class GoodCodeExample extends MovieClip
 	{
+		private var myButton:Button;
+		private var myLabel:TextField;
+
 		public function GoodCodeExample()
 		{
-			addEventListener(MyCustomEvent.MY_CUSTOM_EVENT, handleCustomEvent);
-			dispatchEvent(new MyCustomEvent(MyCustomEvent.MY_CUSTOM_EVENT));
+			myButton = new Button();
+			myButton.addEventListener(MouseEvent.CLICK, buttonClicked);
+			addChild(myButton);
+
+			myLabel = new TextField();
+			myLabel.text = "Click the button!";
+			addChild(myLabel);
+
+			myButton.x = 100;
+			myButton.y = 100;
+			myLabel.x = 100;
+			myLabel.y = 150;
+
 		}
 
-		private function handleCustomEvent(event:MyCustomEvent):void
+		private function buttonClicked(event:MouseEvent):void
 		{
-			trace("Custom event received: " + event.data);
+			myLabel.text = "Button clicked!";
 		}
 	}
 }
 
-import flash.events.Event;
 
-class MyCustomEvent extends Event
-{
-	public static const MY_CUSTOM_EVENT:String = "myCustomEvent";
-	public var data:String;
+// Bad Code:  Direct manipulation of timeline elements and global variables, leading to spaghetti code and difficult maintainability.
 
-	public function MyCustomEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, data:String = null)
-	{
-		super(type, bubbles, cancelable);
-		this.data = data;
-	}
-}
+//This code is bad because of its global variable reliance and lack of organization.
 
-// Bad Code: Direct manipulation of display objects and lack of event handling
+stop();
 
-package
-{
-	import flash.display.Sprite;
+myGlobalVar = 0;
 
-	public class BadCodeExample extends Sprite
-	{
-		public function BadCodeExample()
-		{
-			var square:Sprite = new Sprite();
-			square.graphics.beginFill(0xFF0000);
-			square.graphics.drawRect(0, 0, 100, 100);
-			square.graphics.endFill();
-			addChild(square);
+button1.addEventListener(MouseEvent.CLICK, function():void{
+	myGlobalVar++;
+	trace("Button Clicked! Count: " + myGlobalVar);
+	_root.myLabel.text = "Clicked " + myGlobalVar + " times!";
+});
 
-			//Directly manipulating properties without events, this makes it hard to manage and debug.
-			square.x = 100;
-			square.y = 100;
-			
-			//No event listener to handle changes in the state or interactions with other objects
-		}
-	}
-}
+//Further bad practices would include direct manipulation of timeline items via _root,
+//lack of error handling, and no encapsulation of functionality in classes.
+
+
+
