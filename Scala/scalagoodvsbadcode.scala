@@ -1,51 +1,51 @@
-// Good Code: Using a case class and pattern matching for efficient data handling.
-case class User(id: Int, name: String, email: String)
+// Good Code: Using immutable data structures and pattern matching for robust and readable code.
+object GoodCode {
+  sealed trait Result
+  case class Success(value: Int) extends Result
+  case class Failure(message: String) extends Result
 
-object UserDatabase {
-  val users: Seq[User] = Seq(
-    User(1, "Alice", "alice@example.com"),
-    User(2, "Bob", "bob@example.com"),
-    User(3, "Charlie", "charlie@example.com")
-  )
-
-  def findUserById(id: Int): Option[User] = users.find(_.id == id)
-
-  def processUser(user: User): String = user match {
-    case User(id, name, email) => s"User ID: $id, Name: $name, Email: $email"
-    case _ => "Invalid user data"
-  }
-}
-
-
-// Bad Code:  Mutable variables and inefficient search.  Avoids functional paradigms.
-object UserDatabaseBad {
-  var users: Array[User] = Array(
-    new User(1, "Alice", "alice@example.com"),
-    new User(2, "Bob", "bob@example.com"),
-    new User(3, "Charlie", "charlie@example.com")
-  )
-
-  def findUserById(id: Int): User = {
-    var foundUser: User = null
-    for (user <- users) {
-      if (user.id == id) {
-        foundUser = user
-        break
-      }
+  def processData(data: List[Int]): Result = {
+    data match {
+      case Nil => Failure("Empty data")
+      case head :: tail if head < 0 => Failure("Negative value encountered")
+      case head :: tail => Success(head * 2) //Example operation. Replace with desired operation.
     }
-    foundUser
   }
-  class User(val id: Int, val name: String, val email: String){
-  }
-  def processUser(user: User): String = {
-      if(user == null) return "Invalid User"
-      s"User ID: ${user.id}, Name: ${user.name}, Email: ${user.email}"
+
+  def main(args: Array[String]): Unit = {
+    val goodData = List(1, 2, 3)
+    val badData = List(-1, 2, 3)
+    val emptyData = List()
+
+    println(processData(goodData)) // Success(2)
+    println(processData(badData))  // Failure(Negative value encountered)
+    println(processData(emptyData)) // Failure(Empty data)
+
   }
 }
 
-object Main extends App{
-  println(UserDatabase.findUserById(1).getOrElse(User(0,"","")).name)
-  println(UserDatabase.processUser(User(1,"John","john@example.com")))
-  println(UserDatabaseBad.findUserById(2).name)
-  println(UserDatabaseBad.processUser(null))
+
+// Bad Code: Mutable state and less readable structure.  Avoid this style.
+object BadCode {
+  def processData(data: Array[Int]): Int = {
+    var result = 0
+    var i = 0
+    while (i < data.length) {
+      if (data(i) < 0) {
+        return -1 //Error Handling is poor
+      }
+      result += data(i) * 2 //Example operation. Replace with desired operation.
+      i += 1
+    }
+    result
+  }
+
+  def main(args: Array[String]): Unit = {
+    val goodData = Array(1, 2, 3)
+    val badData = Array(-1, 2, 3)
+
+    println(processData(goodData)) //6
+    println(processData(badData))  //-1
+
+  }
 }
