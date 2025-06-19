@@ -1,51 +1,43 @@
-// Good Code: Using immutable data structures and pattern matching for robust and efficient code.
-object GoodCode {
-  sealed trait Result[T]
-  case class Success[T](value: T) extends Result[T]
-  case class Failure(error: String) extends Result[Nothing]
+// Good Code: Using a case class and pattern matching for efficient and readable code.
+case class User(id: Int, name: String, email: String)
 
-  def processData(data: String): Result[Int] = {
-    try {
-      val num = data.toInt
-      if (num > 0) Success(num) else Failure("Number must be positive")
-    } catch {
-      case e: NumberFormatException => Failure(s"Invalid input: ${e.getMessage}")
-    }
+object GoodCodeExample extends App {
+  val users = List(User(1, "Alice", "alice@example.com"), User(2, "Bob", "bob@example.com"))
+
+  val alice = users.find(_.id == 1) match {
+    case Some(user) => user
+    case None => throw new Exception("Alice not found")
   }
 
-  def main(args: Array[String]): Unit = {
-    processData("10").match {
-      case Success(value) => println(s"Success: $value")
-      case Failure(error) => println(s"Failure: $error")
-    }
-    processData("-5").match {
-      case Success(value) => println(s"Success: $value")
-      case Failure(error) => println(s"Failure: $error")
-    }
-    processData("abc").match {
-      case Success(value) => println(s"Success: $value")
-      case Failure(error) => println(s"Failure: $error")
-    }
-  }
+  println(s"Alice's email: ${alice.email}")
+
+
+  //Efficiently filtering and transforming user data.
+  val emails = users.filter(_.name.startsWith("A")).map(_.email)
+  println(s"Emails starting with A: $emails")
 }
 
 
-// Bad Code:  Mutable variables, exception handling without specific error types, and unclear logic.
-object BadCode {
-  def processData(data: String): Int = {
-    var result = 0
-    try {
-      result = data.toInt
-      if (result < 0) throw new Exception("Negative number")
-    } catch {
-      case e: Exception => println("Error: " + e.getMessage)
-    }
-    result
-  }
+// Bad Code:  Inefficient and less readable code using mutable variables and imperative style.
+object BadCodeExample extends App {
+  var users = List[User]()
+  users ::= User(1,"Alice","alice@example.com")
+  users ::= User(2,"Bob","bob@example.com")
 
-  def main(args: Array[String]): Unit = {
-    println(processData("10"))
-    println(processData("-5"))
-    println(processData("abc"))
+  var aliceEmail = ""
+  for(user <- users){
+    if(user.id == 1){
+      aliceEmail = user.email
+    }
   }
+  println(s"Alice's email (bad): $aliceEmail")
+
+  var emailsStartingWithA = List[String]()
+  for(user <- users){
+      if(user.name.startsWith("A")){
+          emailsStartingWithA ::= user.email
+      }
+  }
+  println(s"Emails starting with A (bad): $emailsStartingWithA")
 }
+
