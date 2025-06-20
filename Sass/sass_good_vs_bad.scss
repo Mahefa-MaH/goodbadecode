@@ -1,84 +1,48 @@
-// Good Sass: Using mixins for reusable styles and modularity
+// Good Sass: Using modules and mixins for maintainability and reusability
 
-@mixin button-style($color, $size) {
-  background-color: $color;
-  padding: 10px $size;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+@use "functions" as *; // Importing custom functions
+@use "mixins" as *;     // Importing custom mixins
 
-  &:hover {
-    background-color: darken($color, 10%);
-  }
-}
-
-.primary-button {
-  @include button-style(blue, 20px);
-}
-
-.secondary-button {
-  @include button-style(green, 15px);
-}
-
-
-// Bad Sass:  Repeating styles and lack of organization
-
-.primary-button {
-  background-color: blue;
+.button {
+  @include button-style(primary); //Using a mixin for styling variations
+  width: 100px;
   padding: 10px 20px;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  &:hover {
-    background-color: darken(blue, 10%);
-  }
 }
 
-.secondary-button {
+.button--secondary {
+  @include button-style(secondary);
+}
+
+
+// Bad Sass: Inconsistent naming, repetitive code, lack of organization
+
+.btn { //Inconsistent naming
+  background-color: blue;
+  color: white;
+  padding: 10px;
+}
+
+.btn-secondary {
   background-color: green;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  &:hover {
-    background-color: darken(green, 10%);
-  }
+  color: white;
+  padding: 10px; //Repetitive code
 }
 
-//Good Sass: Using placeholders and functions for maintainability
-
-$primary-color: blue;
-$secondary-color: green;
-
-@function button-padding($size) {
-  @return 10px $size;
+//Modules: functions.scss
+@function rem($px) {
+  @return $px / 16 + rem;
 }
 
-%button-base {
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.primary-button {
-  @extend %button-base;
-  background-color: $primary-color;
-  padding: button-padding(20px);
-  &:hover {
-    background-color: darken($primary-color, 10%);
-  }
-}
-
-.secondary-button {
-  @extend %button-base;
-  background-color: $secondary-color;
-  padding: button-padding(15px);
-  &:hover {
-    background-color: darken($secondary-color, 10%);
+//Modules: mixins.scss
+@mixin button-style($type) {
+  @if $type == primary {
+    background-color: blue;
+    color: white;
+  } @else if $type == secondary {
+    background-color: green;
+    color: white;
   }
 }
 
