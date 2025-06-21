@@ -1,53 +1,70 @@
-// Good Code: Using event listeners and a custom class for better organization and maintainability.
+//Good Code: Using a custom event to handle data updates between classes.
 
 package
 {
-	public class GoodCodeExample extends MovieClip
+	public class DataManager
 	{
-		private var myButton:Button;
-		private var myLabel:TextField;
-
-		public function GoodCodeExample()
-		{
-			myButton = new Button();
-			myButton.addEventListener(MouseEvent.CLICK, buttonClicked);
-			addChild(myButton);
-
-			myLabel = new TextField();
-			myLabel.text = "Click the button!";
-			addChild(myLabel);
-
-			myButton.x = 100;
-			myButton.y = 100;
-			myLabel.x = 100;
-			myLabel.y = 150;
-
+		public event function dataUpdated(e:Event):void{
+			//Handle Data Update here
 		}
 
-		private function buttonClicked(event:MouseEvent):void
+		public function updateData(newData:Object):void
 		{
-			myLabel.text = "Button clicked!";
+			//Process new data
+			dispatchEvent(new Event("dataUpdated"));
 		}
 	}
 }
 
 
-// Bad Code:  Direct manipulation of timeline elements and global variables, leading to spaghetti code and difficult maintainability.
+package
+{
+	public class DataDisplay extends MovieClip
+	{
+		private var dataManager:DataManager;
 
-//This code is bad because of its global variable reliance and lack of organization.
+		public function DataDisplay()
+		{
+			dataManager = new DataManager();
+			dataManager.addEventListener("dataUpdated", onDataUpdated);
 
-stop();
+		}
 
-myGlobalVar = 0;
-
-button1.addEventListener(MouseEvent.CLICK, function():void{
-	myGlobalVar++;
-	trace("Button Clicked! Count: " + myGlobalVar);
-	_root.myLabel.text = "Clicked " + myGlobalVar + " times!";
-});
-
-//Further bad practices would include direct manipulation of timeline items via _root,
-//lack of error handling, and no encapsulation of functionality in classes.
+		private function onDataUpdated(e:Event):void
+		{
+			//Update Display elements with the new data from DataManager.
+			trace("Data Updated");
+		}
+	}
+}
 
 
 
+//Bad Code: Tight Coupling and lack of error handling.
+
+package
+{
+	public class BadDataManager
+	{
+		public var data:Object;
+		public function updateData(newData:Object):void{
+			data = newData;
+		}
+	}
+}
+
+package
+{
+	public class BadDataDisplay extends MovieClip
+	{
+		private var dataManager:BadDataManager = new BadDataManager();
+
+		public function BadDataDisplay()
+		{
+			//Directly access and update, no event handling.
+			dataManager.updateData({name:"John",age:30});
+			trace(dataManager.data.name); //Error prone if data is null or missing.
+
+		}
+	}
+}
