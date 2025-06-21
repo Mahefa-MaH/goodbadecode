@@ -1,7 +1,6 @@
-**Title:** Zig vs. C: Memory Management Divergence
+**Title:** Zig vs. C: Memory Management Efficiency
 
-**Summary:** Zig's built-in memory management features, particularly its allocator model and compile-time error detection for memory safety, contrast sharply with C's manual memory management, which relies heavily on programmer discipline to prevent leaks and dangling pointers.  This results in differing levels of safety and ease of development.
-
+**Summary:**  Zig's compile-time memory management and built-in error handling offer improved safety and performance compared to C's manual memory management, which is prone to errors like memory leaks and dangling pointers.  Zig's stricter type system further enhances code reliability.
 
 **Good Code (Zig):**
 
@@ -9,18 +8,22 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
     var buf = try allocator.alloc(u8, 10);
     defer allocator.free(buf);
 
     for (buf) |*b, i| {
-        b.* = @intCast(u8, i + 97); // 'a'
+        b.* = @intCast(u8, i + 1);
     }
 
-    std.debug.print("{s}\n", .{buf});
+    std.debug.print("Buffer: ", .{});
+    for (buf) |b| {
+        std.debug.print("{d} ", .{b});
+    }
+    std.debug.print("\n", .{});
 }
 ```
 
@@ -31,15 +34,21 @@ pub fn main() !void {
 #include <stdlib.h>
 
 int main() {
-    char *buf = (char *)malloc(10); // No error handling
-    if (buf == NULL) return 1; //Minimal error handling
-
-    for (int i = 0; i < 10; i++) {
-        buf[i] = i + 'a';
+    unsigned char *buf = (unsigned char *)malloc(10); //Memory allocation without error checking
+    if (buf == NULL) {
+        return 1;
     }
 
-    printf("%s\n", buf); 
-    //free(buf); // Missing free() - memory leak!
+    for (int i = 0; i < 10; i++) {
+        buf[i] = i + 1;
+    }
+
+    printf("Buffer: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", buf[i]);
+    }
+    printf("\n");
+    //free(buf); //Missing free, causing memory leak!
     return 0;
 }
 ```
@@ -47,11 +56,11 @@ int main() {
 
 **Key Takeaways:**
 
-* **Memory Safety:** Zig's `defer` statement and allocator guarantee that `buf` is freed, preventing memory leaks. The C code lacks this crucial safety net, introducing the risk of leaks.  The C code also lacks proper error handling on `malloc()`.
-* **Error Handling:** Zig's `try` keyword forces the programmer to handle allocation errors explicitly, leading to more robust code. The C code handles allocation failure minimally, increasing the risk of program crashes.
-* **Readability & Maintainability:** Zig's approach, while more verbose initially, improves code clarity and reduces the chance of subtle memory-related bugs in larger projects. The C code's brevity can be deceptive and mask potential issues.
-* **Compile-Time Safety:** Zig's compiler actively checks for memory management errors at compile time, catching many issues before runtime. C's reliance on runtime checks leaves more opportunities for memory-related vulnerabilities.
-* **Allocator Management:** Zig's explicit allocator usage gives the programmer more control and allows for more efficient memory management strategies compared to C's more generic approach.
+* **Error Handling:** Zig's `try` keyword and `!` error handling mechanism forces the programmer to explicitly handle potential allocation failures, preventing runtime crashes.  The C code lacks robust error handling for `malloc`.
+* **Memory Safety:** Zig's `defer allocator.free(buf);` ensures the memory allocated is automatically freed, even if errors occur, preventing memory leaks. The C code omits the `free()` call entirely, leading to a memory leak.
+* **Allocator Management:** Zig's explicit allocator usage promotes better control and avoids potential issues from implicit global allocators.  C relies on a global allocator, which can be less efficient and harder to debug.
+* **Type Safety:** Zig's type system helps prevent common C errors such as buffer overflows and pointer arithmetic mistakes.  While not directly demonstrated in this short example, Zig's stronger type system contributes to overall code safety and maintainability.
+* **Readability:** Zig's syntax, while initially requiring a learning curve, often leads to more readable and maintainable code compared to the terseness that can sometimes lead to ambiguity in C.
 
 
-This example highlights a core difference. Zig prioritizes safety and compile-time guarantees, while C prioritizes low-level control and efficiency at the expense of increased programmer responsibility for memory management.
+Note:  Both code snippets perform the same basic task of allocating a buffer, populating it with values, and printing its contents.  The crucial difference lies in how they handle memory management and error handling.  The C example demonstrates common pitfalls that Zig avoids through its design.
