@@ -1,57 +1,65 @@
-// Good Code: Using a dedicated class for data and leveraging LINQ for efficient querying.
-
-public class Product
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-}
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public class GoodCodeExample
 {
-    public static void Main(string[] args)
+    public static double CalculateAverage(IEnumerable<double> numbers)
     {
-        List<Product> products = new List<Product>()
+        if (numbers == null || !numbers.Any())
         {
-            new Product { Id = 1, Name = "Product A", Price = 10.99m },
-            new Product { Id = 2, Name = "Product B", Price = 25.50m },
-            new Product { Id = 3, Name = "Product C", Price = 5.75m }
-        };
-
-        var expensiveProducts = products.Where(p => p.Price > 10).Select(p => p.Name);
-
-        foreach (var productName in expensiveProducts)
-        {
-            Console.WriteLine(productName);
+            throw new ArgumentException("Input sequence cannot be null or empty.");
         }
 
-        //More advanced features can be added here, like using async/await for I/O bound operations, or error handling.
+        return numbers.Average();
+    }
+
+    public static void Main(string[] args)
+    {
+        var numbers = new List<double> { 1.0, 2.5, 3.7, 4.2, 5.9 };
+        double average = CalculateAverage(numbers);
+        Console.WriteLine($"Average: {average}");
+
+
+        try
+        {
+            double avg = CalculateAverage(null);
+            Console.WriteLine($"Average: {avg}");
+        }
+        catch (ArgumentException ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 }
 
 
-// Bad Code: Mixing data and logic, using inefficient loops, and lacking error handling.
-
 public class BadCodeExample
 {
+    public static double CalculateAverage(List<double> numbers) // No null check and less flexible
+    {
+        double sum = 0;
+        foreach (double number in numbers)
+        {
+            sum += number;
+        }
+        return sum / numbers.Count; // Potential DivideByZeroException
+    }
     public static void Main(string[] args)
     {
-        string[] productNames = { "Product A", "Product B", "Product C" };
-        decimal[] productPrices = { 10.99m, 25.50m, 5.75m };
+        var numbers = new List<double> { 1.0, 2.5, 3.7, 4.2, 5.9 };
+        double average = CalculateAverage(numbers);
+        Console.WriteLine($"Average: {average}");
 
-        List<string> expensiveProducts = new List<string>();
-        for (int i = 0; i < productNames.Length; i++)
-        {
-            if (productPrices[i] > 10)
-            {
-                expensiveProducts.Add(productNames[i]);
-            }
-        }
 
-        foreach (string productName in expensiveProducts)
+        try
         {
-            Console.WriteLine(productName);
+            double avg = CalculateAverage(new List<double>()); //Potential Exception
+            Console.WriteLine($"Average: {avg}");
         }
-        //Lack of error handling, inefficient code,  tight coupling.
+        catch (DivideByZeroException ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 }
