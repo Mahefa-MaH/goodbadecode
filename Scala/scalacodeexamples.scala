@@ -1,43 +1,54 @@
-// Good Code: Using a case class and pattern matching for efficient and readable code.
-case class User(id: Int, name: String, email: String)
+// Good Code: Using immutable data structures and pattern matching for a concise and efficient solution.
+object GoodCode extends App {
+  sealed trait Result
+  case class Success(value: Int) extends Result
+  case class Failure(reason: String) extends Result
 
-object GoodCodeExample extends App {
-  val users = List(User(1, "Alice", "alice@example.com"), User(2, "Bob", "bob@example.com"))
-
-  val alice = users.find(_.id == 1) match {
-    case Some(user) => user
-    case None => throw new Exception("Alice not found")
-  }
-
-  println(s"Alice's email: ${alice.email}")
-
-
-  //Efficiently filtering and transforming user data.
-  val emails = users.filter(_.name.startsWith("A")).map(_.email)
-  println(s"Emails starting with A: $emails")
-}
-
-
-// Bad Code:  Inefficient and less readable code using mutable variables and imperative style.
-object BadCodeExample extends App {
-  var users = List[User]()
-  users ::= User(1,"Alice","alice@example.com")
-  users ::= User(2,"Bob","bob@example.com")
-
-  var aliceEmail = ""
-  for(user <- users){
-    if(user.id == 1){
-      aliceEmail = user.email
+  def processData(data: List[Int]): Result = {
+    data match {
+      case Nil => Failure("Empty data")
+      case head :: tail if head < 0 => Failure("Negative value encountered")
+      case head :: tail => Success(head * tail.sum)
+      
     }
   }
-  println(s"Alice's email (bad): $aliceEmail")
 
-  var emailsStartingWithA = List[String]()
-  for(user <- users){
-      if(user.name.startsWith("A")){
-          emailsStartingWithA ::= user.email
-      }
-  }
-  println(s"Emails starting with A (bad): $emailsStartingWithA")
+  val goodData = List(1, 2, 3)
+  val badData = List(-1, 2, 3)
+  val emptyData = List.empty[Int]
+
+  println(processData(goodData))  //Success(6)
+  println(processData(badData))   //Failure(Negative value encountered)
+  println(processData(emptyData)) //Failure(Empty data)
 }
 
+
+// Bad Code: Mutable variables, unnecessary complexity, and poor error handling.
+object BadCode extends App {
+  def processData(data: List[Int]): Int = {
+    var result = 0
+    var error = false
+    for (i <- data) {
+      if (i < 0) {
+        error = true
+      } else {
+        result += i
+      }
+    }
+    if (error) {
+      throw new Exception("Negative value encountered") //Poor error handling;  should use Option or Either.
+    } else {
+      result
+    }
+  }
+  try{
+    val goodData = List(1,2,3)
+    val badData = List(-1,2,3)
+    println(processData(goodData)) //6
+    println(processData(badData))  //Exception
+  }
+  catch{
+    case e:Exception => println(e.getMessage)
+  }
+
+}
