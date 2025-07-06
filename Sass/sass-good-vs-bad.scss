@@ -1,50 +1,69 @@
-// Good Sass: Using mixins and functions for maintainability and reusability.
+// Good Sass: Using mixins and functions for maintainability and reusability
 
 @mixin button-style($color, $size: 16px) {
+  padding: 10px 20px;
+  font-size: $size;
   background-color: $color;
-  padding: 10px $size;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  &:hover {
+    background-color: darken($color, 10%);
+  }
 }
 
-@function calculate-font-size($base-size, $multiplier) {
-  @return $base-size * $multiplier;
+@function rem($px) {
+  @return $px / 16 + rem;
 }
+
 
 .good-button {
   @include button-style(blue);
 }
 
 .good-button-large {
-  @include button-style(green, 20px);
+  @include button-style(green, 24px);
 }
 
-.good-text {
-  font-size: calculate-font-size(14px, 1.5);
+.good-button-custom {
+  @include button-style(#f00, rem(20));
 }
 
 
-// Bad Sass: Inconsistent naming, lack of organization, and unnecessary nesting.
+// Bad Sass: Repetitive code and lack of organization
 
 .bad-button {
+  padding: 10px 20px;
+  font-size: 16px;
   background-color: red;
-  padding: 10px 15px;
-  border:none;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
-  &-large {
-    padding: 20px 30px;
-  }
-  &-text {
-    font-size: 20px;
+  &:hover {
+    background-color: darken(red, 10%);
   }
 }
 
-.bad-container {
-  .bad-element {
-    .bad-subelement {
-      font-size:12px;
-    }
+.bad-button-blue {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: blue;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  &:hover {
+    background-color: darken(blue, 10%);
+  }
+}
+
+.bad-button-green {
+  padding: 10px 20px;
+  font-size: 24px;
+  background-color: green;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  &:hover {
+    background-color: darken(green, 10%);
   }
 }
