@@ -1,0 +1,66 @@
+// Good Code: Using blocks for asynchronous operations and error handling
+
+#import <Foundation/Foundation.h>
+
+@interface MyNetworkManager : NSObject
+
+- (void)fetchDataWithCompletion:(void (^)(NSData * _Nullable data, NSError * _Nullable error))completion;
+
+@end
+
+@implementation MyNetworkManager
+
+- (void)fetchDataWithCompletion:(void (^)(NSData * _Nullable data, NSError * _Nullable error))completion {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // Simulate network request
+        sleep(2);
+        NSError *error = nil;
+        NSData *data = [@"{\"key\":\"value\"}" dataUsingEncoding:NSUTF8StringEncoding];
+        if (arc4random_uniform(2) == 0) { // Simulate 50% chance of error
+            error = [NSError errorWithDomain:@"MyNetworkErrorDomain" code:100 userInfo:@{NSLocalizedDescriptionKey: @"Network error"}];
+            data = nil;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(data, error);
+        });
+    });
+}
+
+@end
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        MyNetworkManager *manager = [[MyNetworkManager alloc] init];
+        [manager fetchDataWithCompletion:^(NSData * _Nullable data, NSError * _Nullable error) {
+            if (error) {
+                NSLog(@"Error: %@", error);
+            } else {
+                NSError *jsonError = nil;
+                NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+                if (jsonError) {
+                    NSLog(@"JSON error: %@", jsonError);
+                } else {
+                    NSLog(@"Data: %@", json);
+                }
+            }
+        }];
+        [[NSRunLoop currentRunLoop] run];
+    }
+    return 0;
+}
+
+
+// Bad Code: Ignoring error handling and using outdated methods
+
+#import <Foundation/Foundation.h>
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        NSURL *url = [NSURL URLWithString:@"https://example.com"];
+        NSURLRequest *request = [NSURLRequest requestWithURL:url];
+        NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+        NSString *response = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        NSLog(@"%@",response); // No error handling, potential crashes
+    }
+    return 0;
+}
