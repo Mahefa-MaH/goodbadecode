@@ -1,39 +1,88 @@
-**Title:** Efficient String Concatenation in Smalltalk
+**Title:**  Smalltalk: Efficient vs. Inefficient Message Passing
 
-**Summary:**  Smalltalk's `String` class offers optimized concatenation methods (`yourself`, `append:`), unlike naive string addition which creates numerous intermediate objects. This significantly impacts performance, especially with many concatenations.
+**Summary:**  Efficient Smalltalk leverages the benefits of dynamic dispatch with careful method selection and object structure. Inefficient Smalltalk suffers from excessive method lookups, leading to performance bottlenecks and potential memory issues.
+
 
 **Good Code:**
 
 ```smalltalk
-string1 := 'Hello'.
-string2 := ' '.
-string3 := 'World!'.
+Object subclass: #EfficientPoint
+    instanceVariableNames: 'x y'
+    classVariableNames: ''
+    package: 'Examples' !
 
-result := string1 copy.  "Create a copy to avoid modifying the original"
-result append: string2.
-result append: string3.
+EfficientPoint >> initializeX: x Y: y
+    x := x.
+    y := y.
+!
 
-Transcript show: result; cr.  "Output: Hello World!"
+EfficientPoint >> distanceTo: aPoint
+    ^ ((self x - aPoint x) squared + (self y - aPoint y) squared) sqrt.
+!
+
+EfficientPoint subclass: #OptimizedPoint
+    instanceVariableNames: ''
+    classVariableNames: ''
+    package: 'Examples' !
+
+OptimizedPoint >> initializeX: x Y: y
+    x := x.
+    y := y.
+!
+
+OptimizedPoint >> distanceTo: aPoint
+    self isKindOf: OptimizedPoint ifTrue: [^ self optimizedDistanceTo: aPoint].
+    ^ super distanceTo: aPoint.
+!
+
+OptimizedPoint >> optimizedDistanceTo: aPoint
+    "Optimized for specific point type if needed"
+    ^ ((self x - aPoint x) squared + (self y - aPoint y) squared) sqrt.
+
 ```
+
+This code utilizes inheritance and method specialization (in `OptimizedPoint`) for potential performance gains in specific situations. Method lookup is contained by clear class hierarchies.
+
 
 **Bad Code:**
 
 ```smalltalk
-string1 := 'Hello'.
-string2 := ' '.
-string3 := 'World!'.
+Object subclass: #InefficientPoint
+    instanceVariableNames: 'x y'
+    classVariableNames: ''
+    package: 'Examples' !
 
-result := string1 + string2 + string3.  "Inefficient string concatenation"
+InefficientPoint >> initializeX: x Y: y
+    x := x.
+    y := y.
+!
 
-Transcript show: result; cr.  "Output: Hello World!"
+InefficientPoint >> distanceTo: aPoint
+    x := self x.  "Redundant assignment"
+    y := self y.  "Redundant assignment"
+    aX := aPoint x. "Redundant assignment"
+    aY := aPoint y. "Redundant assignment"
+
+    ^ ((x - aX) squared + (y - aY) squared) sqrt.
+!
+
+InefficientPoint >> extraMethod: aNumber  "Unnecessary method bloating the class"
+    ^ aNumber + 1.
+!
+
 ```
+
+This code exhibits redundant variable assignments, unnecessary methods which can slow down method lookups, and lacks any performance optimization strategies.
 
 
 **Key Takeaways:**
 
-* **Efficiency:** The good code uses `append:` which modifies the string *in place*, avoiding the creation of multiple intermediate strings. The bad code creates two new strings during the '+' operations, resulting in significantly higher memory allocation and garbage collection overhead, especially when dealing with many strings.
-* **Immutability:** Smalltalk strings are immutable.  The good code properly handles this by creating a copy of `string1` before appending. The bad code implicitly relies on the compiler's optimization (which might not always be present or predictable across implementations), and it can lead to unexpected results if string1 is subsequently used.
-* **Readability:**  While both examples produce the same result, the good code is more explicit about its intent and better reflects Smalltalk's idiomatic approach to string manipulation.  Using `append:` clarifies the intent of modifying an existing string.
-* **Memory Management:** The bad code has a considerably higher memory footprint due to the generation of temporary strings. This leads to increased garbage collection cycles, resulting in performance degradation.
+* **Minimize Redundant Computations:**  The good code avoids unnecessary variable reassignments, directly using instance variables.
+* **Efficient Method Lookup:**  Clear inheritance hierarchies and optimized subclassing reduce the time spent searching for methods.
+* **Method Specialization:**  The `OptimizedPoint` example demonstrates how to utilize subclassing to bypass slower generic implementations.
+* **Avoid Unnecessary Methods:**  The bad code includes a method (`extraMethod`) that adds no value and contributes to increased search time in the method table.
+* **Clean Code:**  The good code is well-structured and easy to understand. This promotes maintainability and reduces the risk of introducing errors.
+* **Object-Oriented Design:**  Leveraging inheritance and polymorphism improves code organization and extensibility.
 
 
+This example showcases basic Smalltalk code optimization.  More advanced techniques involving caching, compiler optimizations, and specialized collection classes can further improve performance in real-world scenarios.
