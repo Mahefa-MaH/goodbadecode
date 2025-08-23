@@ -1,70 +1,53 @@
-//Good Code: Using a custom event to handle data updates between classes.
+// Good Code: Using event listeners for efficient UI interaction
 
 package
 {
-	public class DataManager
+	import flash.display.Sprite;
+	import flash.events.MouseEvent;
+
+	public class GoodCodeExample extends Sprite
 	{
-		public event function dataUpdated(e:Event):void{
-			//Handle Data Update here
+		public function GoodCodeExample()
+		{
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0xFF0000);
+			button.graphics.drawRect(0, 0, 100, 50);
+			button.graphics.endFill();
+			button.x = 50;
+			button.y = 50;
+			addChild(button);
+
+			button.addEventListener(MouseEvent.CLICK, handleClick);
 		}
 
-		public function updateData(newData:Object):void
+		private function handleClick(event:MouseEvent):void
 		{
-			//Process new data
-			dispatchEvent(new Event("dataUpdated"));
+			trace("Button clicked!");
 		}
 	}
 }
 
 
-package
-{
-	public class DataDisplay extends MovieClip
-	{
-		private var dataManager:DataManager;
-
-		public function DataDisplay()
-		{
-			dataManager = new DataManager();
-			dataManager.addEventListener("dataUpdated", onDataUpdated);
-
-		}
-
-		private function onDataUpdated(e:Event):void
-		{
-			//Update Display elements with the new data from DataManager.
-			trace("Data Updated");
-		}
-	}
-}
-
-
-
-//Bad Code: Tight Coupling and lack of error handling.
+// Bad Code: Inefficient and hard-to-maintain event handling
 
 package
 {
-	public class BadDataManager
-	{
-		public var data:Object;
-		public function updateData(newData:Object):void{
-			data = newData;
-		}
-	}
-}
+	import flash.display.Sprite;
+	import flash.events.MouseEvent;
 
-package
-{
-	public class BadDataDisplay extends MovieClip
+	public class BadCodeExample extends Sprite
 	{
-		private var dataManager:BadDataManager = new BadDataManager();
-
-		public function BadDataDisplay()
+		public function BadCodeExample()
 		{
-			//Directly access and update, no event handling.
-			dataManager.updateData({name:"John",age:30});
-			trace(dataManager.data.name); //Error prone if data is null or missing.
+			var button:Sprite = new Sprite();
+			button.graphics.beginFill(0x0000FF);
+			button.graphics.drawRect(0, 0, 100, 50);
+			button.graphics.endFill();
+			button.x = 150;
+			button.y = 50;
+			addChild(button);
 
+			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{trace("Button clicked (bad way)!");}); //anonymous function, makes debugging hard
 		}
 	}
 }
