@@ -1,88 +1,51 @@
-**Title:**  Smalltalk: Efficient vs. Inefficient Message Passing
+**Title:** Smalltalk: Efficient vs. Inefficient Collection Iteration
 
-**Summary:**  Efficient Smalltalk leverages the benefits of dynamic dispatch with careful method selection and object structure. Inefficient Smalltalk suffers from excessive method lookups, leading to performance bottlenecks and potential memory issues.
-
+**Summary:**  Efficient Smalltalk collection iteration utilizes iterators or blocks for optimal performance, avoiding unnecessary object creation. Inefficient approaches repeatedly access elements by index, leading to performance degradation, especially with large collections.
 
 **Good Code:**
 
 ```smalltalk
-Object subclass: #EfficientPoint
-    instanceVariableNames: 'x y'
-    classVariableNames: ''
-    package: 'Examples' !
+orderedCollection := OrderedCollection new.
+orderedCollection addAll: #(1 2 3 4 5 6 7 8 9 10).
 
-EfficientPoint >> initializeX: x Y: y
-    x := x.
-    y := y.
-!
+sum := 0.
+orderedCollection do: [:each | sum := sum + each].  "Using a block (iterator)"
 
-EfficientPoint >> distanceTo: aPoint
-    ^ ((self x - aPoint x) squared + (self y - aPoint y) squared) sqrt.
-!
+Transcript show: 'Sum (efficient): ', sum printString; cr.
 
-EfficientPoint subclass: #OptimizedPoint
-    instanceVariableNames: ''
-    classVariableNames: ''
-    package: 'Examples' !
 
-OptimizedPoint >> initializeX: x Y: y
-    x := x.
-    y := y.
-!
+sum2 := 0.
+1 to: orderedCollection size do: [:i | sum2 := sum2 + (orderedCollection at: i)]. "Inefficient approach"
 
-OptimizedPoint >> distanceTo: aPoint
-    self isKindOf: OptimizedPoint ifTrue: [^ self optimizedDistanceTo: aPoint].
-    ^ super distanceTo: aPoint.
-!
+Transcript show: 'Sum (inefficient): ', sum2 printString; cr.
 
-OptimizedPoint >> optimizedDistanceTo: aPoint
-    "Optimized for specific point type if needed"
-    ^ ((self x - aPoint x) squared + (self y - aPoint y) squared) sqrt.
 
 ```
-
-This code utilizes inheritance and method specialization (in `OptimizedPoint`) for potential performance gains in specific situations. Method lookup is contained by clear class hierarchies.
-
 
 **Bad Code:**
 
 ```smalltalk
-Object subclass: #InefficientPoint
-    instanceVariableNames: 'x y'
-    classVariableNames: ''
-    package: 'Examples' !
+orderedCollection := OrderedCollection new.
+orderedCollection addAll: #(1 2 3 4 5 6 7 8 9 10).
 
-InefficientPoint >> initializeX: x Y: y
-    x := x.
-    y := y.
-!
+sum := 0.
+i := 1.
+[i <= orderedCollection size] whileTrue: [
+  sum := sum + (orderedCollection at: i).
+  i := i + 1.
+].
 
-InefficientPoint >> distanceTo: aPoint
-    x := self x.  "Redundant assignment"
-    y := self y.  "Redundant assignment"
-    aX := aPoint x. "Redundant assignment"
-    aY := aPoint y. "Redundant assignment"
-
-    ^ ((x - aX) squared + (y - aY) squared) sqrt.
-!
-
-InefficientPoint >> extraMethod: aNumber  "Unnecessary method bloating the class"
-    ^ aNumber + 1.
-!
+Transcript show: 'Sum (bad, while loop): ', sum printString; cr.
 
 ```
 
-This code exhibits redundant variable assignments, unnecessary methods which can slow down method lookups, and lacks any performance optimization strategies.
-
-
 **Key Takeaways:**
 
-* **Minimize Redundant Computations:**  The good code avoids unnecessary variable reassignments, directly using instance variables.
-* **Efficient Method Lookup:**  Clear inheritance hierarchies and optimized subclassing reduce the time spent searching for methods.
-* **Method Specialization:**  The `OptimizedPoint` example demonstrates how to utilize subclassing to bypass slower generic implementations.
-* **Avoid Unnecessary Methods:**  The bad code includes a method (`extraMethod`) that adds no value and contributes to increased search time in the method table.
-* **Clean Code:**  The good code is well-structured and easy to understand. This promotes maintainability and reduces the risk of introducing errors.
-* **Object-Oriented Design:**  Leveraging inheritance and polymorphism improves code organization and extensibility.
+* **Performance:** The `do:` method (using a block) is significantly faster for large collections because it avoids repeated indexing and object creation.  The `whileTrue:` loop is also inefficient, especially in this simple case.
+* **Readability:** The `do:` method with a block is more concise and expresses the intent more clearly than the index-based approach.  This leads to improved code maintainability.
+* **Memory Management:**  The `do:` method is more memory-efficient as it doesn't repeatedly create intermediate objects for indexing.
+* **Smalltalk Idiom:** Utilizing blocks is a core Smalltalk programming idiom and promotes a functional style, making code cleaner and easier to reason about.  The bad code uses more imperative constructs less common in Smalltalk best practice.
+* **Error Handling:** Implicit error handling within the `do:` method simplifies error handling.  Explicit error checks (like checking for index out of bounds) are not required.
 
 
-This example showcases basic Smalltalk code optimization.  More advanced techniques involving caching, compiler optimizations, and specialized collection classes can further improve performance in real-world scenarios.
+The "bad" code demonstrates a common pitfall of trying to emulate imperative loop structures in Smalltalk, which contradicts its message-passing and collection-oriented paradigm. The "good" code showcases the elegant and efficient approach preferred by experienced Smalltalk programmers.
