@@ -1,34 +1,46 @@
-// Good Code: Using event listeners for efficient UI interaction
+// Good Code: Using Event Listeners and a State Machine for Robustness
 
 package
 {
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 
 	public class GoodCodeExample extends Sprite
 	{
+		private var state:String = "idle";
+
 		public function GoodCodeExample()
 		{
-			var button:Sprite = new Sprite();
-			button.graphics.beginFill(0xFF0000);
-			button.graphics.drawRect(0, 0, 100, 50);
-			button.graphics.endFill();
-			button.x = 50;
-			button.y = 50;
-			addChild(button);
-
-			button.addEventListener(MouseEvent.CLICK, handleClick);
+			addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 		}
 
-		private function handleClick(event:MouseEvent):void
+		private function onAddedToStage(e:Event):void
 		{
-			trace("Button clicked!");
+			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+			//Simplified State Machine Example. Could be expanded for more complex scenarios.
+
+			addEventListener(MouseEvent.CLICK, onClick);
+
+		}
+
+		private function onClick(e:MouseEvent):void{
+			switch(state){
+				case "idle":
+					state = "active";
+					trace("Activated");
+					break;
+				case "active":
+					state = "idle";
+					trace("Deactivated");
+					break;
+			}
 		}
 	}
 }
 
 
-// Bad Code: Inefficient and hard-to-maintain event handling
+// Bad Code:  Direct Manipulation, Lack of Structure, and Error Prone
 
 package
 {
@@ -39,15 +51,17 @@ package
 	{
 		public function BadCodeExample()
 		{
-			var button:Sprite = new Sprite();
-			button.graphics.beginFill(0x0000FF);
-			button.graphics.drawRect(0, 0, 100, 50);
-			button.graphics.endFill();
-			button.x = 150;
-			button.y = 50;
-			addChild(button);
+			this.addEventListener(MouseEvent.CLICK,onClick);
+		}
 
-			button.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void{trace("Button clicked (bad way)!");}); //anonymous function, makes debugging hard
+		private function onClick(e:MouseEvent):void
+		{
+			if (this.graphics.beginFill(0xff0000)){
+				this.graphics.drawRect(10,10,100,100);
+				this.graphics.endFill();
+			} else {
+				this.graphics.clear();
+			}
 		}
 	}
 }
