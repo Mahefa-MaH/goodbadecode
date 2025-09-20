@@ -1,7 +1,5 @@
 // Good Code: Using Blocks for Asynchronous Operations
 
-#import <Foundation/Foundation.h>
-
 @interface MyObject : NSObject
 
 - (void)performLongRunningTaskWithCompletion:(void (^)(BOOL success, NSError *error))completion;
@@ -12,12 +10,10 @@
 
 - (void)performLongRunningTaskWithCompletion:(void (^)(BOOL success, NSError *error))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Simulate a long-running task
+        // Simulate long-running task
         sleep(2); 
-
         BOOL success = arc4random_uniform(2) == 0; // Random success/failure
         NSError *error = success ? nil : [NSError errorWithDomain:@"MyDomain" code:1 userInfo:nil];
-
         dispatch_async(dispatch_get_main_queue(), ^{
             completion(success, error);
         });
@@ -26,46 +22,42 @@
 
 @end
 
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        MyObject *obj = [[MyObject alloc] init];
-        [obj performLongRunningTaskWithCompletion:^(BOOL success, NSError *error) {
-            if (success) {
-                NSLog(@"Task completed successfully!");
-            } else {
-                NSLog(@"Task failed: %@", error);
-            }
-        }];
-        [[NSRunLoop currentRunLoop] run]; // Keep the program running to see the result
-    }
-    return 0;
-}
-
 
 // Bad Code: Improper Error Handling and Synchronous Operation
 
-#import <Foundation/Foundation.h>
+@interface MyBadObject : NSObject
 
-@interface MyObject : NSObject
 - (BOOL)performLongRunningTask;
+
 @end
 
-@implementation MyObject
+@implementation MyBadObject
+
 - (BOOL)performLongRunningTask {
-    sleep(2); //Simulates long running task.  Blocking.
+    // Simulate long-running task (blocking the main thread!)
+    sleep(2);
     return arc4random_uniform(2) == 0;
 }
+
 @end
 
-
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-      MyObject *obj = [[MyObject alloc] init];
-      if ([obj performLongRunningTask]) {
-          NSLog(@"Task completed successfully!");
-      } else {
-          NSLog(@"Task failed!"); //Minimal error handling
-      }
+//Example usage (Good code)
+MyObject *obj = [[MyObject alloc] init];
+[obj performLongRunningTaskWithCompletion:^(BOOL success, NSError *error) {
+    if (success) {
+        NSLog(@"Task completed successfully!");
+    } else {
+        NSLog(@"Task failed: %@", error);
     }
-    return 0;
+}];
+
+
+// Example usage (Bad Code) - Avoid this pattern
+MyBadObject *badObj = [[MyBadObject alloc] init];
+BOOL success = [badObj performLongRunningTask]; // Blocks the main thread!
+if (success) {
+    NSLog(@"Task completed successfully (bad code)!");
+} else {
+    NSLog(@"Task failed (bad code)!");
 }
+
