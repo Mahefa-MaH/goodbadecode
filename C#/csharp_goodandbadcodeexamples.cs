@@ -1,109 +1,70 @@
-// Good Code: Using generics for type safety and efficiency
-public class GoodCodeExample<T> where T : IComparable<T>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class GoodCodeExample
 {
-    public T FindMax(T[] array)
+    public static double CalculateAverage(IEnumerable<double> numbers)
     {
-        if (array == null || array.Length == 0)
+        //Handles empty input gracefully.
+        if (!numbers.Any())
         {
-            throw new ArgumentException("Array cannot be null or empty.");
+            return 0; // Or throw an exception, depending on requirements.
         }
-        T max = array[0];
-        for (int i = 1; i < array.Length; i++)
+        return numbers.Average();
+    }
+
+    public static void Main(string[] args)
+    {
+        List<double> numbers = new List<double> { 1.0, 2.0, 3.0, 4.0, 5.0 };
+        double average = CalculateAverage(numbers);
+        Console.WriteLine($"Average: {average}");
+
+
+        //Demonstrates robustness with potential exceptions.
+        List<double> numbers2 = new List<double>();
+        double average2 = CalculateAverage(numbers2);
+        Console.WriteLine($"Average of empty list: {average2}");
+
+        List<double?> nullableNumbers = new List<double?> { 1.0, null, 3.0 };
+        double? nullableAverage = CalculateAverageNullable(nullableNumbers);
+        Console.WriteLine($"Average of nullable list: {nullableAverage}");
+
+    }
+        public static double? CalculateAverageNullable(IEnumerable<double?> numbers)
+    {
+        //Handles null values and empty input gracefully.
+        if (!numbers.Any())
         {
-            if (array[i].CompareTo(max) > 0)
-            {
-                max = array[i];
-            }
+            return null; 
         }
-        return max;
+        //Using Where to filter null values before calculating the average
+        var nonNullNumbers = numbers.Where(x => x.HasValue);
+        return nonNullNumbers.Any() ? nonNullNumbers.Average(x => x.Value) : (double?)null;
     }
 }
 
 
-// Bad Code: Lack of error handling and inefficient string concatenation
 public class BadCodeExample
 {
-    public string ConcatenateStrings(string[] strings)
+    public static double CalculateAverage(List<double> numbers)
     {
-        string result = "";
-        foreach (string str in strings)
+        double sum = 0;
+        foreach (double number in numbers)
         {
-            result += str; // Inefficient string concatenation
+            sum += number;
         }
-        return result;
-    }
-}
-
-//Good Code: Using async/await for asynchronous operations.
-public class GoodAsyncExample
-{
-    public async Task<string> DownloadDataAsync(string url)
-    {
-        using (var client = new HttpClient())
-        {
-            return await client.GetStringAsync(url);
-        }
-    }
-}
-
-//Bad Code: Blocking the UI thread during an asynchronous operation.
-public class BadAsyncExample
-{
-    public void DownloadData(string url)
-    {
-        using (var client = new HttpClient())
-        {
-            string data = client.GetStringAsync(url).Result; //Blocks the UI thread
-            //Process data
-        }
-    }
-}
-
-
-//Good Code:  Utilizing Dependency Injection for better testability and maintainability.
-public interface IEmailService
-{
-    void SendEmail(string to, string subject, string body);
-}
-
-public class EmailService : IEmailService
-{
-    public void SendEmail(string to, string subject, string body)
-    {
-        //Implementation for sending email
-        Console.WriteLine($"Email sent to: {to}, Subject: {subject}, Body: {body}");
-    }
-}
-
-public class UserService
-{
-    private readonly IEmailService _emailService;
-
-    public UserService(IEmailService emailService)
-    {
-        _emailService = emailService;
+        return sum / numbers.Count; //Potential DivideByZeroException
     }
 
-    public void RegisterUser(string email)
+    public static void Main(string[] args)
     {
-        _emailService.SendEmail(email, "Welcome", "Thank you for registering!");
-    }
-}
+        List<double> numbers = new List<double> { 1, 2, 3, 4, 5 };
+        double average = CalculateAverage(numbers);
+        Console.WriteLine(average);
 
-//Bad Code: Tight coupling and difficult to test
-public class BadUserService
-{
-    public void RegisterUser(string email)
-    {
-        //Implementation directly calls email sending logic.
-        //Difficult to test and maintain.
-        SendEmail(email,"Welcome","Thank you for registering!");
-
-    }
-
-    private void SendEmail(string to, string subject, string body)
-    {
-        //Email sending implementation
-        Console.WriteLine($"Email sent to: {to}, Subject: {subject}, Body: {body}");
+        List<double> emptyList = new List<double>();
+        double average2 = CalculateAverage(emptyList); //Throws DivideByZeroException
+        Console.WriteLine(average2); //This line will not be reached.
     }
 }
